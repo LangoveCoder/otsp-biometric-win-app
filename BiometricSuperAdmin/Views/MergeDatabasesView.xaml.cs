@@ -1,0 +1,271 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using Microsoft.Win32;
+using BiometricCommon.Services;
+
+namespace BiometricSuperAdmin.Views
+{
+    public partial class MergeDatabasesView : Page
+    {
+        private readonly DatabaseMergeService _mergeService;
+        private List<DatabaseFileInfo> _selectedFiles;
+        private MergeResult? _lastMergeResult;
+
+        public MergeDatabasesView()
+        {
+            InitializeComponent();
+            _mergeService = new DatabaseMergeService();
+            _selectedFiles = new List<DatabaseFileInfo>();
+        }
+
+        private void SelectFilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Title = "Select Database Files to Merge",
+                Filter = "Database Files (*.db)|*.db|All Files (*.*)|*.*",
+                Multiselect = true,
+                CheckFileExists = true
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                foreach (var filePath in openFileDialog.FileNames)
+                {
+                    if (_selectedFiles.Any(f => f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    _selectedFiles.Add(new DatabaseFileInfo
+                    {
+                        FilePath = filePath,
+                        FileName = Path.GetFileName(filePath)
+                    });
+                }
+
+                RefreshFilesList();
+            }
+        }
+
+        private void ClearFilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedFiles.Count == 0)
+                return;
+
+            var result = MessageBox.Show(
+                "Are you sure you want to clear all selected files?",
+                "Clear Files",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                _selectedFiles.Clear();
+                RefreshFilesList();
+            }
+        }
+
+        private async void StartMergeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedFiles.Count == 0)
+            {
+                MessageBox.Show(
+                    "Please select at least one database file to merge.",
+                    "No Files Selected",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            var confirmResult = MessageBox.Show(
+                $"You are about to merge {_selectedFiles.Count} database file(s) into the master database.\n\n" +
+                "This operation will:\n" +
+                "• Read all students from selected databases\n" +
+                "• Detect and resolve duplicates\n" +
+                "• Import unique students into master database\n\n" +
+                "Do you want to continue?",
+                "Confirm Merge",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmResult != MessageBoxResult.Yes)
+                return;
+
+            await PerformMergeAsync();
+        }
+
+        private async Task PerformMergeAsync()
+        {
+            try
+            {
+                SelectFilesButton.IsEnabled = false;
+                ClearFilesButton.IsEnabled = false;
+                StartMergeButton.IsEnabled = false;
+                LoadingOverlay.Visibility = Visibility.Visible;
+                ProgressSection.Visibility = Visibility.Visible;
+                ViewReportButton.Visibility = Visibility.Collapsed;
+
+                MergeProgressBar.Value = 0;
+                ProgressPercentageTextBlock.Text = "0%";
+                ProgressTextBlock.Text = "Reading database files...";
+
+                var databaseResults = new List<DatabaseReadResult>();
+
+                for (int i = 0; i < _selectedFiles.Count; i++)
+                {
+                    var file = _selectedFiles[i];
+                    ProgressTextBlock.Text = $"Reading {file.FileName}... ({i + 1}/{_selectedFiles.Count})";
+
+                    var readResult = await _mergeService.ReadDatabaseAsync(file.FilePath);
+                    databaseResults.Add(readResult);
+
+                    int readProgress = (int)((i + 1) / (double)_selectedFiles.Count * 30);
+                    MergeProgressBar.Value = readProgress;
+                    ProgressPercentageTextBlock.Text = $"{readProgress}%";
+                }
+
+                var failedReads = databaseResults.Where(r => !r.Success).ToList();
+                if (failedReads.Any())
+                {
+                    var failedNames = string.Join("\n", failedReads.Select(f => $"• {f.FileName}: {f.ErrorMessage}"));
+                    MessageBox.Show(
+                        $"Failed to read the following database files:\n\n{failedNames}\n\n" +
+                        "These files will be skipped. Do you want to continue with the remaining files?",
+                        "Read Errors",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+
+                var progress = new Progress<MergeProgress>(p =>
+                {
+                    int totalProgress = 30 + (int)(p.Percentage * 0.7);
+                    MergeProgressBar.Value = totalProgress;
+                    ProgressPercentageTextBlock.Text = $"{totalProgress}%";
+                    ProgressTextBlock.Text = p.Message;
+                });
+
+                _lastMergeResult = await _mergeService.MergeIntoMasterAsync(databaseResults, progress);
+
+                if (_lastMergeResult.Success)
+                {
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
+                    ViewReportButton.Visibility = Visibility.Visible;
+
+                    MessageBox.Show(
+                        $"✅ Database merge completed successfully!\n\n" +
+                        $"Total Students Read: {_lastMergeResult.TotalStudentsRead}\n" +
+                        $"Duplicates Found: {_lastMergeResult.DuplicateCount}\n" +
+                        $"Students Imported: {_lastMergeResult.StudentsImported}\n" +
+                        $"Students Skipped: {_lastMergeResult.StudentsSkipped}\n\n" +
+                        "Click 'View Detailed Report' for more information.",
+                        "Merge Complete",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    _selectedFiles.Clear();
+                    RefreshFilesList();
+                }
+                else
+                {
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
+                    MessageBox.Show(
+                        $"❌ Merge failed!\n\n{_lastMergeResult.ErrorMessage}",
+                        "Merge Failed",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+                MessageBox.Show(
+                    $"An error occurred during merge:\n\n{ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                SelectFilesButton.IsEnabled = true;
+                ClearFilesButton.IsEnabled = true;
+                StartMergeButton.IsEnabled = _selectedFiles.Count > 0;
+            }
+        }
+
+        private void ViewReportButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_lastMergeResult == null)
+            {
+                MessageBox.Show(
+                    "No merge report available.",
+                    "No Report",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var report = _mergeService.GenerateMergeReport(_lastMergeResult);
+
+            var reportWindow = new Window
+            {
+                Title = "Merge Report",
+                Width = 700,
+                Height = 600,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ResizeMode = ResizeMode.CanResize
+            };
+
+            var scrollViewer = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Padding = new Thickness(20)
+            };
+
+            var textBlock = new TextBlock
+            {
+                Text = report,
+                FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                FontSize = 12,
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            scrollViewer.Content = textBlock;
+            reportWindow.Content = scrollViewer;
+
+            reportWindow.ShowDialog();
+        }
+
+        private void RefreshFilesList()
+        {
+            FilesListBox.ItemsSource = null;
+            FilesListBox.ItemsSource = _selectedFiles;
+
+            if (_selectedFiles.Count == 0)
+            {
+                FileCountTextBlock.Text = "No files selected";
+                StartMergeButton.IsEnabled = false;
+            }
+            else
+            {
+                FileCountTextBlock.Text = $"{_selectedFiles.Count} file(s) selected";
+                StartMergeButton.IsEnabled = true;
+            }
+
+            ProgressSection.Visibility = Visibility.Collapsed;
+            ViewReportButton.Visibility = Visibility.Collapsed;
+            MergeProgressBar.Value = 0;
+        }
+    }
+
+    public class DatabaseFileInfo
+    {
+        public string FilePath { get; set; } = string.Empty;
+        public string FileName { get; set; } = string.Empty;
+    }
+}

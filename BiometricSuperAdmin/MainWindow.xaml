@@ -1,0 +1,238 @@
+<Window x:Class="BiometricSuperAdmin.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Biometric Verification System - SuperAdmin" 
+        Height="768" 
+        Width="1366"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Page Title Style -->
+        <Style x:Key="PageTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#673AB7"/>
+            <Setter Property="Margin" Value="0,0,0,24"/>
+        </Style>
+
+        <!-- Section Header Style -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <!-- Stats Card Style -->
+        <Style x:Key="StatsCard" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.2" Color="Gray"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Primary Button Style -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#673AB7"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#7E57C2"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#CCCCCC"/>
+                    <Setter Property="Cursor" Value="Arrow"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Secondary Button Style -->
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#BDBDBD"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#F5F5F5"/>
+                    <Setter Property="Foreground" Value="#999999"/>
+                    <Setter Property="Cursor" Value="Arrow"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Custom TextField Style -->
+        <Style x:Key="CustomTextField" TargetType="TextBox">
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,8"/>
+        </Style>
+
+        <!-- Custom DataGrid Style -->
+        <Style x:Key="CustomDataGrid" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="AlternatingRowBackground" Value="#F5F5F5"/>
+            <Setter Property="RowHeight" Value="40"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Top Menu Bar -->
+        <Menu DockPanel.Dock="Top" Background="White">
+            <MenuItem Header="File">
+                <MenuItem Header="Backup Database" Click="BackupButton_Click"/>
+                <Separator/>
+                <MenuItem Header="Exit" Click="ExitMenuItem_Click"/>
+            </MenuItem>
+
+            <MenuItem Header="Tools">
+                <MenuItem Header="Export Master Configuration" Click="ExportConfigMenuItem_Click"/>
+                <MenuItem Header="Import Master Configuration" Click="ImportConfigMenuItem_Click"/>
+                <MenuItem Header="Merge Databases" Click="MergeDatabases_Click"/>
+                <Separator/>
+                <MenuItem Header="Set Registration Context" Click="SetContextMenuItem_Click"/>
+                <MenuItem Header="Clear Registration Context" Click="ClearContextMenuItem_Click"/>
+            </MenuItem>
+
+            <MenuItem Header="Help">
+                <MenuItem Header="User Guide" Click="UserGuideMenuItem_Click"/>
+                <MenuItem Header="About" Click="AboutMenuItem_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Main Layout -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Sidebar Navigation -->
+            <Border Grid.Column="0" 
+                    Background="#1A237E" 
+                    BorderBrush="#0D47A1" 
+                    BorderThickness="0,0,1,0">
+                <StackPanel>
+                    <!-- App Logo/Title -->
+                    <Border Background="#0D47A1" Padding="20" Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="🔐" 
+                                     FontSize="48" 
+                                     HorizontalAlignment="Center" 
+                                     Foreground="White"/>
+                            <TextBlock Text="Biometric System" 
+                                     FontSize="16" 
+                                     FontWeight="Bold" 
+                                     HorizontalAlignment="Center" 
+                                     Foreground="White" 
+                                     Margin="0,8,0,0"/>
+                            <TextBlock Text="SuperAdmin Panel" 
+                                     FontSize="12" 
+                                     HorizontalAlignment="Center" 
+                                     Foreground="#B39DDB"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Navigation Menu -->
+                    <ListBox x:Name="NavigationListBox"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="White"
+                             FontSize="14"
+                             SelectionChanged="NavigationListBox_SelectionChanged">
+                        <ListBox.Resources>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="20,15"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="Border" 
+                                                    Background="Transparent" 
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="Border" Property="Background" Value="#283593"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Border" Property="Background" Value="#303F9F"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.Resources>
+
+                        <ListBoxItem Content="📊 Dashboard" IsSelected="True"/>
+                        <ListBoxItem Content="👤 Student Registration"/>
+                        <ListBoxItem Content="🏫 Manage Colleges"/>
+                        <ListBoxItem Content="📝 Manage Tests"/>
+                        <ListBoxItem Content="📦 Generate Package"/>
+                        <ListBoxItem Content="📈 Reports &amp; Analytics"/>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+
+            <!-- Main Content Area -->
+            <Frame x:Name="MainContentFrame" 
+                   Grid.Column="1" 
+                   NavigationUIVisibility="Hidden"
+                   Background="#FAFAFA"/>
+        </Grid>
+    </DockPanel>
+</Window>

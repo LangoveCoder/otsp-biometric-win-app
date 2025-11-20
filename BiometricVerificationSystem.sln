@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricSuperAdmin", "BiometricSuperAdmin\BiometricSuperAdmin.csproj", "{84500744-5EFE-4322-960D-969F787C6227}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricCommon", "BiometricCommon\BiometricCommon.csproj", "{880C0050-8897-4542-86CA-53FFF651EAEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricCollegeVerify", "BiometricCollegeVerify\BiometricCollegeVerify.csproj", "{263157BC-5474-CBCA-71A9-753274AFD239}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{84500744-5EFE-4322-960D-969F787C6227}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84500744-5EFE-4322-960D-969F787C6227}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84500744-5EFE-4322-960D-969F787C6227}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84500744-5EFE-4322-960D-969F787C6227}.Release|Any CPU.Build.0 = Release|Any CPU
+		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F35B62EF-2890-4DB9-AB63-D02F9DE0722C}
+	EndGlobalSection
+EndGlobal
