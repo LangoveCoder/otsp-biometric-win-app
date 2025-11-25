@@ -29,6 +29,14 @@ namespace BiometricCommon.Services
             _context.InitializeDatabase();
         }
 
+        public Student? GetStudentByRollNumber(string rollNumber)
+        {
+            return _context.Students
+                .Include(s => s.College)
+                .Include(s => s.Test)
+                .FirstOrDefault(s => s.RollNumber == rollNumber);
+        }
+
         #region College Operations
 
         /// <summary>

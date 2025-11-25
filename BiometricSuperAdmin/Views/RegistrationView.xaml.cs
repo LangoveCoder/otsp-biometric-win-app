@@ -1,4 +1,8 @@
 using System;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using BiometricCommon.Models;
@@ -9,7 +13,7 @@ namespace BiometricSuperAdmin.Views
     public partial class RegistrationView : Page
     {
         private readonly DatabaseService _databaseService;
-        private RegistrationContext? _currentContext;
+        private RegContext? _currentContext;
 
         public RegistrationView()
         {
@@ -18,10 +22,10 @@ namespace BiometricSuperAdmin.Views
             Loaded += RegistrationView_Loaded;
         }
 
-        private async void RegistrationView_Loaded(object sender, RoutedEventArgs e)
+        private void RegistrationView_Loaded(object sender, RoutedEventArgs e)
         {
             // Load registration context
-            _currentContext = RegistrationContext.GetCurrentContext();
+            _currentContext = RegContext.GetCurrentContext();
 
             if (_currentContext == null)
             {
@@ -68,10 +72,7 @@ namespace BiometricSuperAdmin.Views
                 }
 
                 // Check if student already registered
-                var existingStudent = await _databaseService.GetStudentByRollNumberAsync(
-                    rollNumber,
-                    _currentContext.CollegeId,
-                    _currentContext.TestId);
+                var existingStudent = _databaseService.GetStudentByRollNumber(rollNumber);
 
                 if (existingStudent != null)
                 {
@@ -91,49 +92,20 @@ namespace BiometricSuperAdmin.Views
                 RegisterButton.IsEnabled = false;
 
                 // Simulate fingerprint capture (for testing)
-                // In production, this would call the real fingerprint scanner
                 byte[] fingerprintTemplate = SimulateFingerprintCapture();
 
-                // Register or update student
-                if (existingStudent != null)
-                {
-                    // Update existing student
-                    existingStudent.FingerprintTemplate = fingerprintTemplate;
-                    existingStudent.RegistrationDate = DateTime.Now;
-                    existingStudent.LastModifiedDate = DateTime.Now;
-                    existingStudent.DeviceId = _currentContext.LaptopId;
+                // Register student
+                await _databaseService.RegisterStudentAsync(
+                    rollNumber,
+                    _currentContext.CollegeId,
+                    _currentContext.TestId,
+                    fingerprintTemplate);
 
-                    await _databaseService.UpdateStudentAsync(existingStudent);
-
-                    MessageBox.Show(
-                        $"Student '{rollNumber}' re-registered successfully!",
-                        "Success",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-                else
-                {
-                    // Create new student
-                    var student = new Student
-                    {
-                        RollNumber = rollNumber,
-                        CollegeId = _currentContext.CollegeId,
-                        TestId = _currentContext.TestId,
-                        DeviceId = _currentContext.LaptopId,
-                        FingerprintTemplate = fingerprintTemplate,
-                        RegistrationDate = DateTime.Now,
-                        LastModifiedDate = DateTime.Now,
-                        IsVerified = false
-                    };
-
-                    await _databaseService.RegisterStudentAsync(student);
-
-                    MessageBox.Show(
-                        $"Student '{rollNumber}' registered successfully!",
-                        "Success",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
+                MessageBox.Show(
+                    $"Student '{rollNumber}' registered successfully!",
+                    "Success",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
 
                 // Clear form for next student
                 RollNumberTextBox.Clear();
@@ -156,7 +128,6 @@ namespace BiometricSuperAdmin.Views
 
         /// <summary>
         /// Simulate fingerprint capture for testing
-        /// In production, this would be replaced with actual scanner code
         /// </summary>
         private byte[] SimulateFingerprintCapture()
         {
@@ -173,9 +144,9 @@ namespace BiometricSuperAdmin.Views
     }
 
     /// <summary>
-    /// Registration context helper class
+    /// Registration context helper class - renamed to avoid conflicts
     /// </summary>
-    public class RegistrationContext
+    public class RegContext
     {
         public int CollegeId { get; set; }
         public string CollegeName { get; set; } = string.Empty;
@@ -185,19 +156,19 @@ namespace BiometricSuperAdmin.Views
         public DateTime SetDate { get; set; }
 
         private static readonly string ContextFilePath =
-            System.IO.Path.Combine(
+            Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "BiometricVerification",
                 "registration_context.json");
 
-        public static RegistrationContext? GetCurrentContext()
+        public static RegContext? GetCurrentContext()
         {
             try
             {
-                if (System.IO.File.Exists(ContextFilePath))
+                if (File.Exists(ContextFilePath))
                 {
-                    var json = System.IO.File.ReadAllText(ContextFilePath);
-                    return System.Text.Json.JsonSerializer.Deserialize<RegistrationContext>(json);
+                    var json = File.ReadAllText(ContextFilePath);
+                    return JsonSerializer.Deserialize<RegContext>(json);
                 }
             }
             catch
@@ -211,17 +182,17 @@ namespace BiometricSuperAdmin.Views
         {
             try
             {
-                var directory = System.IO.Path.GetDirectoryName(ContextFilePath);
-                if (directory != null && !System.IO.Directory.Exists(directory))
+                var directory = Path.GetDirectoryName(ContextFilePath);
+                if (directory != null && !Directory.Exists(directory))
                 {
-                    System.IO.Directory.CreateDirectory(directory);
+                    Directory.CreateDirectory(directory);
                 }
 
-                var json = System.Text.Json.JsonSerializer.Serialize(this, new System.Text.Json.JsonSerializerOptions
+                var json = JsonSerializer.Serialize(this, new JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
-                System.IO.File.WriteAllText(ContextFilePath, json);
+                File.WriteAllText(ContextFilePath, json);
             }
             catch (Exception ex)
             {
@@ -233,9 +204,9 @@ namespace BiometricSuperAdmin.Views
         {
             try
             {
-                if (System.IO.File.Exists(ContextFilePath))
+                if (File.Exists(ContextFilePath))
                 {
-                    System.IO.File.Delete(ContextFilePath);
+                    File.Delete(ContextFilePath);
                 }
             }
             catch
