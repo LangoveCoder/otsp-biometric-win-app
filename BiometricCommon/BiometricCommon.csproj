@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="FingerprintSDK\" />
     <Folder Include="Helpers\" />
   </ItemGroup>
 

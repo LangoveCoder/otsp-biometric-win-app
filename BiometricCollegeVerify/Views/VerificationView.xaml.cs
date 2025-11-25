@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using BiometricCollegeVerify.Services;
+using BiometricCommon.Services;
 
 namespace BiometricCollegeVerify.Views
 {
