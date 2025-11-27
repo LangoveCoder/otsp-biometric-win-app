@@ -135,19 +135,19 @@ namespace BiometricCommon.Services
                 }
 
                 // Create temporary directory for package contents
-                string tempDir = Path.Combine(Path.GetTempPath(), $"BiometricPackage_{Guid.NewGuid()}");
-                Directory.CreateDirectory(tempDir);
+                // Create temp directory with safe name
+                string tempFolder = Path.Combine(Path.GetTempPath(), "BiomPkg" + Guid.NewGuid().ToString().Replace("-", "").Substring(0, 8));
 
                 try
                 {
                     progress?.Report(new PackageProgress { Message = "Creating college database...", Percentage = 35 });
 
-                    string collegeDbPath = Path.Combine(tempDir, "CollegeData.db");
+                    string collegeDbPath = Path.Combine(tempFolder, "CollegeData.db");
                     await CreateCollegeDatabaseAsync(college, test, students, collegeDbPath, progress);
 
                     progress?.Report(new PackageProgress { Message = "Encrypting database...", Percentage = 60 });
 
-                    string encryptedDbPath = Path.Combine(tempDir, "CollegeData.encrypted");
+                    string encryptedDbPath = Path.Combine(tempFolder, "CollegeData.encrypted");
                     string encryptionKey = EncryptionService.GenerateCollegeKey(college.Code, test.Code);
                     EncryptionService.EncryptFile(collegeDbPath, encryptedDbPath, encryptionKey);
 
@@ -171,10 +171,10 @@ namespace BiometricCommon.Services
                     };
 
                     string packageInfoJson = JsonSerializer.Serialize(packageInfo, new JsonSerializerOptions { WriteIndented = true });
-                    string packageInfoPath = Path.Combine(tempDir, "PackageInfo.json");
+                    string packageInfoPath = Path.Combine(tempFolder, "PackageInfo.json");
                     File.WriteAllText(packageInfoPath, packageInfoJson);
 
-                    string encryptedInfoPath = Path.Combine(tempDir, "PackageInfo.encrypted");
+                    string encryptedInfoPath = Path.Combine(tempFolder, "PackageInfo.encrypted");
                     EncryptionService.EncryptFile(packageInfoPath, encryptedInfoPath, encryptionKey);
 
                     if (File.Exists(packageInfoPath))
@@ -182,11 +182,11 @@ namespace BiometricCommon.Services
 
                     progress?.Report(new PackageProgress { Message = "Creating README file...", Percentage = 75 });
 
-                    CreateReadmeFile(tempDir, college, test, students.Count);
+                    CreateReadmeFile(tempFolder, college, test, students.Count);
 
                     progress?.Report(new PackageProgress { Message = "Creating installation script...", Percentage = 80 });
 
-                    CreateInstallScript(tempDir, college.Code);
+                    CreateInstallScript(tempFolder, college.Code);
 
                     progress?.Report(new PackageProgress { Message = "Creating ZIP package...", Percentage = 85 });
 
@@ -204,7 +204,7 @@ namespace BiometricCommon.Services
                         }
                     }
 
-                    ZipFile.CreateFromDirectory(tempDir, outputPath);
+                    ZipFile.CreateFromDirectory(tempFolder, outputPath);
 
                     result.PackagePath = outputPath;
                     result.PackageSize = new FileInfo(outputPath).Length;
@@ -216,11 +216,11 @@ namespace BiometricCommon.Services
                 finally
                 {
                     // Cleanup temp directory
-                    if (Directory.Exists(tempDir))
+                    if (Directory.Exists(tempFolder))
                     {
                         try
                         {
-                            Directory.Delete(tempDir, true);
+                            Directory.Delete(tempFolder, true);
                         }
                         catch
                         {
