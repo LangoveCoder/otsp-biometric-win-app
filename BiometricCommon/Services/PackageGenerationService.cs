@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using BiometricCommon.Models;
 using BiometricCommon.Database;
 using BiometricCommon.Encryption;
@@ -98,45 +99,66 @@ namespace BiometricCommon.Services
 
                 progress?.Report(new PackageProgress { Message = $"Found {students.Count} students...", Percentage = 25 });
 
-                // Normalize and validate output path
-                outputPath = Path.GetFullPath(outputPath);
-
-                // Check for invalid path patterns
-                if (outputPath.Contains("Sources=") || outputPath.Contains("Data\\Sources") ||
-                    outputPath.Length > 260 || outputPath.Contains("?") || outputPath.Contains("*"))
+                // Clean up the output path properly
+                try
                 {
-                    // Use default location instead
+                    outputPath = Path.GetFullPath(outputPath);
+
+                    // Validate the path doesn't contain invalid characters
+                    char[] invalidChars = Path.GetInvalidPathChars();
+                    if (outputPath.Any(c => invalidChars.Contains(c)))
+                    {
+                        throw new ArgumentException("Output path contains invalid characters");
+                    }
+                }
+                catch
+                {
+                    // If path is invalid, use Desktop as default
                     string defaultDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     outputPath = Path.Combine(defaultDir, $"{college.Code}_Package_{DateTime.Now:yyyyMMddHHmmss}.zip");
                 }
 
-                string outputDirectory = Path.GetDirectoryName(outputPath);
+                string outputDirectory = Path.GetDirectoryName(outputPath) ?? Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-                if (string.IsNullOrEmpty(outputDirectory))
+                // Ensure output directory exists
+                try
                 {
+                    if (!Directory.Exists(outputDirectory))
+                    {
+                        Directory.CreateDirectory(outputDirectory);
+                    }
+                }
+                catch
+                {
+                    // Fall back to Desktop if we can't create the directory
                     outputDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     outputPath = Path.Combine(outputDirectory, $"{college.Code}_Package_{DateTime.Now:yyyyMMddHHmmss}.zip");
                 }
 
-                // Create output directory if it doesn't exist
-                if (!Directory.Exists(outputDirectory))
+                // Create temp directory with simple, clean name - SAFER VERSION
+                string tempBasePath = Path.GetTempPath();
+
+                // Validate temp path
+                if (string.IsNullOrEmpty(tempBasePath) || !Directory.Exists(tempBasePath))
                 {
-                    try
+                    // Fallback to user's temp folder
+                    tempBasePath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "Temp"
+                    );
+
+                    if (!Directory.Exists(tempBasePath))
                     {
-                        Directory.CreateDirectory(outputDirectory);
-                    }
-                    catch
-                    {
-                        // If we can't create the directory, use Desktop
-                        outputDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                        outputPath = Path.Combine(outputDirectory, $"{college.Code}_Package_{DateTime.Now:yyyyMMddHHmmss}.zip");
-                        Directory.CreateDirectory(outputDirectory);
+                        Directory.CreateDirectory(tempBasePath);
                     }
                 }
 
-                // Create temporary directory for package contents
-                // Create temp directory with safe name
-                string tempFolder = Path.Combine(Path.GetTempPath(), "BiomPkg" + Guid.NewGuid().ToString().Replace("-", "").Substring(0, 8));
+                // Create unique folder name
+                string uniqueFolderName = $"BiomPkg{DateTime.Now:yyyyMMddHHmmss}";
+                string tempFolder = Path.Combine(tempBasePath, uniqueFolderName);
+
+                // Create the directory
+                Directory.CreateDirectory(tempFolder);
 
                 try
                 {
@@ -145,11 +167,46 @@ namespace BiometricCommon.Services
                     string collegeDbPath = Path.Combine(tempFolder, "CollegeData.db");
                     await CreateCollegeDatabaseAsync(college, test, students, collegeDbPath, progress);
 
+                    // CRITICAL: Force SQLite to release all connections
+                    SqliteConnection.ClearAllPools();
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+
+                    // Additional wait to ensure file is released
+                    await Task.Delay(500);
+
                     progress?.Report(new PackageProgress { Message = "Encrypting database...", Percentage = 60 });
 
                     string encryptedDbPath = Path.Combine(tempFolder, "CollegeData.encrypted");
                     string encryptionKey = EncryptionService.GenerateCollegeKey(college.Code, test.Code);
-                    EncryptionService.EncryptFile(collegeDbPath, encryptedDbPath, encryptionKey);
+
+                    // Try encryption with retry logic
+                    int retryCount = 0;
+                    bool encrypted = false;
+                    while (!encrypted && retryCount < 3)
+                    {
+                        try
+                        {
+                            EncryptionService.EncryptFile(collegeDbPath, encryptedDbPath, encryptionKey);
+                            encrypted = true;
+                        }
+                        catch (IOException)
+                        {
+                            retryCount++;
+                            if (retryCount < 3)
+                            {
+                                await Task.Delay(1000);
+                                SqliteConnection.ClearAllPools();
+                                GC.Collect();
+                                GC.WaitForPendingFinalizers();
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
+                    }
 
                     if (File.Exists(collegeDbPath))
                         File.Delete(collegeDbPath);
@@ -248,7 +305,9 @@ namespace BiometricCommon.Services
             string dbPath,
             IProgress<PackageProgress>? progress = null)
         {
-            using (var collegeContext = new BiometricContext($"Data Source={dbPath}"))
+            // CRITICAL FIX: Pass only the path, NOT "Data Source={dbPath}"
+            // BiometricContext constructor expects a file path and adds "Data Source=" itself
+            using (var collegeContext = new BiometricContext(dbPath))
             {
                 await collegeContext.Database.EnsureCreatedAsync();
 
@@ -303,7 +362,18 @@ namespace BiometricCommon.Services
                 }
 
                 await collegeContext.SaveChangesAsync();
-            }
+
+                // CRITICAL: Explicitly close the database connection
+                await collegeContext.Database.CloseConnectionAsync();
+
+            } // using block ends here - context is disposed
+
+            // CRITICAL: Add a small delay to ensure file handles are fully released
+            await Task.Delay(100);
+
+            // Force garbage collection to release any lingering handles
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
 
         private void CreateReadmeFile(string tempDir, College college, Test test, int studentCount)
@@ -332,19 +402,19 @@ Windows Installation:
 PACKAGE CONTENTS:
 ═══════════════════════════════════════════════════════════════════
 
-• CollegeData.encrypted    - Encrypted student database
-• PackageInfo.encrypted    - Package metadata
-• Install.bat              - Automatic installer (Windows)
-• README.txt               - This file
+- CollegeData.encrypted    - Encrypted student database
+- PackageInfo.encrypted    - Package metadata
+- Install.bat              - Automatic installer (Windows)
+- README.txt               - This file
 
 ═══════════════════════════════════════════════════════════════════
 
 SYSTEM REQUIREMENTS:
 ═══════════════════════════════════════════════════════════════════
 
-• Windows 10 or later
-• .NET 8.0 Runtime
-• 100 MB free disk space
+- Windows 10 or later
+- .NET 8.0 Runtime
+- 100 MB free disk space
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -359,10 +429,10 @@ Phone: {college.ContactPhone}
 IMPORTANT NOTES:
 ═══════════════════════════════════════════════════════════════════
 
-• This package contains encrypted data for {college.Name} ONLY
-• Do not share this package with other colleges
-• All verification data is stored locally (no internet required)
-• Keep this package in a secure location
+- This package contains encrypted data for {college.Name} ONLY
+- Do not share this package with other colleges
+- All verification data is stored locally (no internet required)
+- Keep this package in a secure location
 
 ═══════════════════════════════════════════════════════════════════
 Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}

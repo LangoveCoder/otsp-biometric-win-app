@@ -25,10 +25,14 @@ namespace BiometricCollegeVerify
             if (_importService.IsPackageImported())
             {
                 LoadCollegeInfo();
+                NavigationListBox.SelectedIndex = 0;
                 MainContentFrame.Navigate(new VerificationView());
             }
             else
             {
+                // Set default selection
+                NavigationListBox.SelectedIndex = 0;
+
                 // Show welcome message
                 System.Windows.MessageBox.Show(
                     "Welcome to the Biometric Verification System!\n\n" +
@@ -43,6 +47,10 @@ namespace BiometricCollegeVerify
         private void NavigationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (NavigationListBox.SelectedIndex < 0)
+                return;
+
+            // Prevent early event firing before initialization
+            if (_importService == null)
                 return;
 
             if (!_importService.IsPackageImported())

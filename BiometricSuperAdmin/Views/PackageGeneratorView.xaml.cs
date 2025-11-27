@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,6 +19,10 @@ namespace BiometricSuperAdmin.Views
         {
             InitializeComponent();
             _packageService = new PackageGenerationService();
+
+            // Clear any default text
+            OutputPathTextBox.Text = string.Empty;
+
             Loaded += PackageGeneratorView_Loaded;
         }
 
@@ -103,7 +108,9 @@ namespace BiometricSuperAdmin.Views
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            if (CollegeComboBox.SelectedItem is not CollegePackageInfo selectedCollege)
+            var selectedCollege = CollegeComboBox.SelectedItem as CollegePackageInfo;
+
+            if (selectedCollege == null)
             {
                 MessageBox.Show(
                     "Please select a college first.",
@@ -113,51 +120,75 @@ namespace BiometricSuperAdmin.Views
                 return;
             }
 
-            var saveDialog = new SaveFileDialog
+            try
             {
-                Title = "Save Verification Package",
-                Filter = "ZIP Package|*.zip",
-                FileName = $"{selectedCollege.CollegeCode}_VerificationPackage_{DateTime.Now:yyyyMMdd}.zip",
-                DefaultExt = "zip",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
-            };
+                // Get Desktop path safely
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string defaultFileName = $"{selectedCollege.CollegeCode}_Package_{DateTime.Now:yyyyMMdd}.zip";
 
-            if (saveDialog.ShowDialog() == true)
+                var saveDialog = new SaveFileDialog
+                {
+                    Title = "Save Verification Package",
+                    Filter = "ZIP Package|*.zip",
+                    FileName = defaultFileName,
+                    DefaultExt = "zip",
+                    InitialDirectory = desktopPath,
+                    AddExtension = true,
+                    ValidateNames = true,
+                    OverwritePrompt = true
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    string selectedPath = saveDialog.FileName;
+
+                    // Validate path
+                    if (string.IsNullOrWhiteSpace(selectedPath))
+                    {
+                        MessageBox.Show("Invalid file path selected.", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    // Set the path
+                    OutputPathTextBox.Text = selectedPath;
+                    UpdateSummary();
+                }
+            }
+            catch (Exception ex)
             {
-                OutputPathTextBox.Text = saveDialog.FileName;
-                UpdateSummary();
+                MessageBox.Show(
+                    $"Error selecting save location:\n\n{ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
         private async void GeneratePackageButton_Click(object sender, RoutedEventArgs e)
         {
-            if (CollegeComboBox.SelectedItem is not CollegePackageInfo selectedCollege)
+            MessageBox.Show($"Output Path: {OutputPathTextBox.Text}", "Debug");
+            var selectedCollege = CollegeComboBox.SelectedItem as CollegePackageInfo;
+            var selectedTest = TestComboBox.SelectedItem as TestPackageInfo;
+
+            if (selectedCollege == null)
             {
-                MessageBox.Show(
-                    "Please select a college.",
-                    "No College Selected",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                MessageBox.Show("Please select a college.", "No College Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (TestComboBox.SelectedItem is not TestPackageInfo selectedTest)
+            if (selectedTest == null)
             {
-                MessageBox.Show(
-                    "Please select a test.",
-                    "No Test Selected",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                MessageBox.Show("Please select a test.", "No Test Selected",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(OutputPathTextBox.Text))
             {
-                MessageBox.Show(
-                    "Please select an output location.",
-                    "No Output Location",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                MessageBox.Show("Please select an output location.", "No Output Location",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -255,11 +286,8 @@ namespace BiometricSuperAdmin.Views
         {
             if (_lastResult == null)
             {
-                MessageBox.Show(
-                    "No package report available.",
-                    "No Report",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                MessageBox.Show("No package report available.", "No Report",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -290,19 +318,15 @@ namespace BiometricSuperAdmin.Views
 
             scrollViewer.Content = textBlock;
             reportWindow.Content = scrollViewer;
-
             reportWindow.ShowDialog();
         }
 
         private void OpenFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_lastResult?.PackagePath == null || string.IsNullOrEmpty(_lastResult.PackagePath))
+            if (string.IsNullOrEmpty(_lastResult?.PackagePath))
             {
-                MessageBox.Show(
-                    "No package location available.",
-                    "No Location",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                MessageBox.Show("No package location available.", "No Location",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -316,11 +340,8 @@ namespace BiometricSuperAdmin.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Error opening folder:\n\n{ex.Message}",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                MessageBox.Show($"Error opening folder:\n\n{ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
