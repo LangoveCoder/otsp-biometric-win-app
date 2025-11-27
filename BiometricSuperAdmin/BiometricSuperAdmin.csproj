@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="System.Reactive.Windows.Forms" Version="6.1.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -35,7 +35,7 @@ namespace BiometricSuperAdmin.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading colleges:\n\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Error loading colleges:\n\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -49,7 +49,7 @@ namespace BiometricSuperAdmin.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading tests:\n\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Error loading tests:\n\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally
             {
@@ -143,7 +143,7 @@ namespace BiometricSuperAdmin.Views
                 var selectedCollege = CollegeComboBox.SelectedItem as College;
                 if (selectedCollege == null)
                 {
-                    MessageBox.Show("Please select a college.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    System.Windows.MessageBox.Show("Please select a college.", "Validation Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                     return;
                 }
 
@@ -161,7 +161,7 @@ namespace BiometricSuperAdmin.Views
 
                     await _databaseService.UpdateTestAsync(_selectedTest);
 
-                    MessageBox.Show("Test updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    System.Windows.MessageBox.Show("Test updated successfully!", "Success", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 }
                 else
                 {
@@ -180,7 +180,7 @@ namespace BiometricSuperAdmin.Views
 
                     await _databaseService.AddTestAsync(newTest);
 
-                    MessageBox.Show($"Test created for {selectedCollege.Name}!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    System.Windows.MessageBox.Show($"Test created for {selectedCollege.Name}!", "Success", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 }
 
                 await LoadTestsAsync();
@@ -188,7 +188,7 @@ namespace BiometricSuperAdmin.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving test:\n\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Error saving test:\n\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally
             {
@@ -200,26 +200,26 @@ namespace BiometricSuperAdmin.Views
         {
             if (_selectedTest == null) return;
 
-            var result = MessageBox.Show(
+            var result = System.Windows.MessageBox.Show(
                 $"Are you sure you want to delete the test '{_selectedTest.Name}'?\n\nThis will mark it as inactive.",
                 "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
 
-            if (result == MessageBoxResult.Yes)
+            if (result == System.Windows.MessageBoxResult.Yes)
             {
                 try
                 {
                     LoadingOverlay.Visibility = Visibility.Visible;
                     await _databaseService.DeleteTestAsync(_selectedTest.Id);
-                    MessageBox.Show("Test deactivated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    System.Windows.MessageBox.Show("Test deactivated successfully!", "Success", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                     await LoadTestsAsync();
                     ClearForm();
                     InfoPanel.Visibility = Visibility.Visible;
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error deleting test:\n\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Windows.MessageBox.Show($"Error deleting test:\n\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 }
                 finally
                 {
@@ -275,43 +275,43 @@ namespace BiometricSuperAdmin.Views
         {
             if (CollegeComboBox.SelectedItem == null)
             {
-                MessageBox.Show("Please select a college.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Please select a college.", "Validation Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(TestNameTextBox.Text))
             {
-                MessageBox.Show("Please enter test name.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Please enter test name.", "Validation Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(TestCodeTextBox.Text))
             {
-                MessageBox.Show("Please enter test code.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Please enter test code.", "Validation Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return false;
             }
 
             if (TestDatePicker.SelectedDate == null)
             {
-                MessageBox.Show("Please select test date.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Please select test date.", "Validation Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return false;
             }
 
             if (RegStartDatePicker.SelectedDate == null)
             {
-                MessageBox.Show("Please select registration start date.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Please select registration start date.", "Validation Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return false;
             }
 
             if (RegEndDatePicker.SelectedDate == null)
             {
-                MessageBox.Show("Please select registration end date.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Please select registration end date.", "Validation Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return false;
             }
 
             if (RegEndDatePicker.SelectedDate < RegStartDatePicker.SelectedDate)
             {
-                MessageBox.Show("Registration end date must be after start date.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Registration end date must be after start date.", "Validation Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return false;
             }
 

@@ -112,22 +112,22 @@ namespace BiometricSuperAdmin.Views
             // College Name validation
             if (string.IsNullOrWhiteSpace(CollegeNameTextBox.Text))
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please enter college name.",
                     "Validation Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
                 CollegeNameTextBox.Focus();
                 return false;
             }
 
             if (CollegeNameTextBox.Text.Trim().Length < 3)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "College name must be at least 3 characters long.",
                     "Validation Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
                 CollegeNameTextBox.Focus();
                 return false;
             }
@@ -135,22 +135,22 @@ namespace BiometricSuperAdmin.Views
             // College Code validation
             if (string.IsNullOrWhiteSpace(CollegeCodeTextBox.Text))
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please enter college code.",
                     "Validation Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
                 CollegeCodeTextBox.Focus();
                 return false;
             }
 
             if (CollegeCodeTextBox.Text.Trim().Length < 3)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "College code must be at least 3 characters long.",
                     "Validation Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
                 CollegeCodeTextBox.Focus();
                 return false;
             }
@@ -161,11 +161,11 @@ namespace BiometricSuperAdmin.Views
                 string email = ContactEmailTextBox.Text.Trim();
                 if (!IsValidEmail(email))
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         "Please enter a valid email address.",
                         "Validation Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                     ContactEmailTextBox.Focus();
                     return false;
                 }

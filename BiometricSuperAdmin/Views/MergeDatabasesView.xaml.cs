@@ -58,13 +58,13 @@ namespace BiometricSuperAdmin.Views
             if (_selectedFiles.Count == 0)
                 return;
 
-            var result = MessageBox.Show(
+            var result = System.Windows.MessageBox.Show(
                 "Are you sure you want to clear all selected files?",
                 "Clear Files",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
 
-            if (result == MessageBoxResult.Yes)
+            if (result == System.Windows.MessageBoxResult.Yes)
             {
                 _selectedFiles.Clear();
                 RefreshFilesList();
@@ -75,15 +75,15 @@ namespace BiometricSuperAdmin.Views
         {
             if (_selectedFiles.Count == 0)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please select at least one database file to merge.",
                     "No Files Selected",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
-            var confirmResult = MessageBox.Show(
+            var confirmResult = System.Windows.MessageBox.Show(
                 $"You are about to merge {_selectedFiles.Count} database file(s) into the master database.\n\n" +
                 "This operation will:\n" +
                 "• Read all students from selected databases\n" +
@@ -91,10 +91,10 @@ namespace BiometricSuperAdmin.Views
                 "• Import unique students into master database\n\n" +
                 "Do you want to continue?",
                 "Confirm Merge",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
 
-            if (confirmResult != MessageBoxResult.Yes)
+            if (confirmResult != System.Windows.MessageBoxResult.Yes)
                 return;
 
             await PerformMergeAsync();
@@ -134,12 +134,12 @@ namespace BiometricSuperAdmin.Views
                 if (failedReads.Any())
                 {
                     var failedNames = string.Join("\n", failedReads.Select(f => $"• {f.FileName}: {f.ErrorMessage}"));
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"Failed to read the following database files:\n\n{failedNames}\n\n" +
                         "These files will be skipped. Do you want to continue with the remaining files?",
                         "Read Errors",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                 }
 
                 var progress = new Progress<MergeProgress>(p =>
@@ -157,7 +157,7 @@ namespace BiometricSuperAdmin.Views
                     LoadingOverlay.Visibility = Visibility.Collapsed;
                     ViewReportButton.Visibility = Visibility.Visible;
 
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"✅ Database merge completed successfully!\n\n" +
                         $"Total Students Read: {_lastMergeResult.TotalStudentsRead}\n" +
                         $"Duplicates Found: {_lastMergeResult.DuplicateCount}\n" +
@@ -165,8 +165,8 @@ namespace BiometricSuperAdmin.Views
                         $"Students Skipped: {_lastMergeResult.StudentsSkipped}\n\n" +
                         "Click 'View Detailed Report' for more information.",
                         "Merge Complete",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
 
                     _selectedFiles.Clear();
                     RefreshFilesList();
@@ -174,21 +174,21 @@ namespace BiometricSuperAdmin.Views
                 else
                 {
                     LoadingOverlay.Visibility = Visibility.Collapsed;
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"❌ Merge failed!\n\n{_lastMergeResult.ErrorMessage}",
                         "Merge Failed",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
                 LoadingOverlay.Visibility = Visibility.Collapsed;
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"An error occurred during merge:\n\n{ex.Message}",
                     "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
             finally
             {
@@ -202,11 +202,11 @@ namespace BiometricSuperAdmin.Views
         {
             if (_lastMergeResult == null)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "No merge report available.",
                     "No Report",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
                 return;
             }
 

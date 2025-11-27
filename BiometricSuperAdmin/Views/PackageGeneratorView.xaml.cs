@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -62,7 +61,6 @@ namespace BiometricSuperAdmin.Views
             {
                 try
                 {
-                    // Load tests for selected college
                     var tests = await _packageService.GetTestsForCollegeAsync(selectedCollege.CollegeId);
 
                     TestComboBox.ItemsSource = tests;
@@ -81,7 +79,6 @@ namespace BiometricSuperAdmin.Views
                         return;
                     }
 
-                    // Auto-select first test
                     if (tests.Count > 0)
                         TestComboBox.SelectedIndex = 0;
 
@@ -121,7 +118,8 @@ namespace BiometricSuperAdmin.Views
                 Title = "Save Verification Package",
                 Filter = "ZIP Package|*.zip",
                 FileName = $"{selectedCollege.CollegeCode}_VerificationPackage_{DateTime.Now:yyyyMMdd}.zip",
-                DefaultExt = "zip"
+                DefaultExt = "zip",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
             };
 
             if (saveDialog.ShowDialog() == true)
@@ -183,7 +181,6 @@ namespace BiometricSuperAdmin.Views
         {
             try
             {
-                // Disable controls
                 CollegeComboBox.IsEnabled = false;
                 TestComboBox.IsEnabled = false;
                 BrowseButton.IsEnabled = false;
@@ -193,22 +190,21 @@ namespace BiometricSuperAdmin.Views
                 ViewReportButton.Visibility = Visibility.Collapsed;
                 OpenFolderButton.Visibility = Visibility.Collapsed;
 
-                // Reset progress
                 GenerateProgressBar.Value = 0;
                 ProgressPercentageTextBlock.Text = "0%";
 
-                // Create progress reporter
                 var progress = new Progress<PackageProgress>(p =>
                 {
-                    GenerateProgressBar.Value = p.Percentage;
-                    ProgressPercentageTextBlock.Text = $"{p.Percentage}%";
-                    ProgressTextBlock.Text = p.Message;
+                    Dispatcher.Invoke(() =>
+                    {
+                        GenerateProgressBar.Value = p.Percentage;
+                        ProgressPercentageTextBlock.Text = $"{p.Percentage}%";
+                        ProgressTextBlock.Text = p.Message;
+                    });
                 });
 
-                // Generate package
                 _lastResult = await _packageService.GeneratePackageAsync(collegeId, testId, outputPath, progress);
 
-                // Show result
                 LoadingOverlay.Visibility = Visibility.Collapsed;
 
                 if (_lastResult.Success)
@@ -248,11 +244,10 @@ namespace BiometricSuperAdmin.Views
             }
             finally
             {
-                // Re-enable controls
                 CollegeComboBox.IsEnabled = true;
                 TestComboBox.IsEnabled = true;
                 BrowseButton.IsEnabled = true;
-                UpdateSummary(); // This will re-enable the generate button if needed
+                UpdateSummary();
             }
         }
 
@@ -301,7 +296,7 @@ namespace BiometricSuperAdmin.Views
 
         private void OpenFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_lastResult == null || string.IsNullOrEmpty(_lastResult.PackagePath))
+            if (_lastResult?.PackagePath == null || string.IsNullOrEmpty(_lastResult.PackagePath))
             {
                 MessageBox.Show(
                     "No package location available.",
@@ -357,7 +352,6 @@ namespace BiometricSuperAdmin.Views
                 GeneratePackageButton.IsEnabled = false;
             }
 
-            // Hide result buttons when selection changes
             ViewReportButton.Visibility = Visibility.Collapsed;
             OpenFolderButton.Visibility = Visibility.Collapsed;
         }

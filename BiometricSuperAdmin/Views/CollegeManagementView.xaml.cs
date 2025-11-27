@@ -32,11 +32,11 @@ namespace BiometricSuperAdmin.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error loading colleges:\n\n{ex.Message}", 
                     "Error", 
-                    MessageBoxButton.OK, 
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK, 
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -53,21 +53,21 @@ namespace BiometricSuperAdmin.Views
                 {
                     await _databaseService.AddCollegeAsync(dialog.College);
                     
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"College '{dialog.College.Name}' added successfully!",
                         "Success",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
 
                     await LoadCollegesAsync();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"Error adding college:\n\n{ex.Message}",
                         "Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
                 }
             }
         }
@@ -92,31 +92,31 @@ namespace BiometricSuperAdmin.Views
                     {
                         await _databaseService.UpdateCollegeAsync(dialog.College);
                         
-                        MessageBox.Show(
+                        System.Windows.MessageBox.Show(
                             $"College '{dialog.College.Name}' updated successfully!",
                             "Success",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Information);
 
                         await LoadCollegesAsync();
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(
+                        System.Windows.MessageBox.Show(
                             $"Error updating college:\n\n{ex.Message}",
                             "Error",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error);
                     }
                 }
             }
             else
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please select a college to edit.",
                     "No Selection",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
             }
         }
 
@@ -124,43 +124,43 @@ namespace BiometricSuperAdmin.Views
         {
             if (CollegesDataGrid.SelectedItem is College college)
             {
-                var result = MessageBox.Show(
+                var result = System.Windows.MessageBox.Show(
                     $"Are you sure you want to delete '{college.Name}'?\n\nThis will mark the college as inactive.",
                     "Confirm Delete",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Warning);
 
-                if (result == MessageBoxResult.Yes)
+                if (result == System.Windows.MessageBoxResult.Yes)
                 {
                     try
                     {
                         await _databaseService.DeleteCollegeAsync(college.Id);
                         
-                        MessageBox.Show(
+                        System.Windows.MessageBox.Show(
                             $"College '{college.Name}' has been deactivated.",
                             "Success",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Information);
 
                         await LoadCollegesAsync();
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(
+                        System.Windows.MessageBox.Show(
                             $"Error deleting college:\n\n{ex.Message}",
                             "Error",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error);
                     }
                 }
             }
             else
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please select a college to delete.",
                     "No Selection",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
             }
         }
     }

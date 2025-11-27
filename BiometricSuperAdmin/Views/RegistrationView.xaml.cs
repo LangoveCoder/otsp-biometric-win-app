@@ -29,11 +29,11 @@ namespace BiometricSuperAdmin.Views
 
             if (_currentContext == null)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Registration context not set. Please set the context first.",
                     "Context Required",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
@@ -50,11 +50,11 @@ namespace BiometricSuperAdmin.Views
                 // Validate context
                 if (_currentContext == null)
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         "Registration context not set. Please set the context first.",
                         "Context Required",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                     return;
                 }
 
@@ -62,11 +62,11 @@ namespace BiometricSuperAdmin.Views
                 string rollNumber = RollNumberTextBox.Text.Trim();
                 if (string.IsNullOrWhiteSpace(rollNumber))
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         "Please enter a roll number.",
                         "Validation Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                     RollNumberTextBox.Focus();
                     return;
                 }
@@ -76,14 +76,14 @@ namespace BiometricSuperAdmin.Views
 
                 if (existingStudent != null)
                 {
-                    var result = MessageBox.Show(
+                    var result = System.Windows.MessageBox.Show(
                         $"Student with roll number '{rollNumber}' is already registered.\n\n" +
                         "Do you want to re-register (update fingerprint)?",
                         "Student Exists",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
+                        System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Question);
 
-                    if (result == MessageBoxResult.No)
+                    if (result == System.Windows.MessageBoxResult.No)
                         return;
                 }
 
@@ -101,11 +101,11 @@ namespace BiometricSuperAdmin.Views
                     _currentContext.TestId,
                     fingerprintTemplate);
 
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Student '{rollNumber}' registered successfully!",
                     "Success",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
 
                 // Clear form for next student
                 RollNumberTextBox.Clear();
@@ -113,11 +113,11 @@ namespace BiometricSuperAdmin.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error during registration: {ex.Message}",
                     "Registration Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
             finally
             {

@@ -40,11 +40,11 @@ namespace BiometricCollegeVerify.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error loading statistics:\n\n{ex.Message}",
                     "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -73,11 +73,11 @@ namespace BiometricCollegeVerify.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Verification error:\n\n{ex.Message}",
                     "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
             finally
             {
@@ -120,12 +120,12 @@ namespace BiometricCollegeVerify.Views
 
                 StudentInfoPanel.Visibility = Visibility.Collapsed;
 
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Verification Failed\n\n{result.Message}\n\n" +
                     "Please try again or use Manual Override.",
                     "Verification Failed",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
             }
         }
 
@@ -222,21 +222,21 @@ namespace BiometricCollegeVerify.Views
 
                 if (string.IsNullOrEmpty(rollNumber))
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         "Please enter a roll number.",
                         "Validation Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                     return;
                 }
 
                 if (string.IsNullOrEmpty(remarks))
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         "Please enter remarks for manual override.",
                         "Validation Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                     return;
                 }
 
@@ -248,20 +248,20 @@ namespace BiometricCollegeVerify.Views
 
                     if (!result.IsSuccessful)
                     {
-                        MessageBox.Show(
+                        System.Windows.MessageBox.Show(
                             result.Message,
                             "Manual Override Failed",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"Error performing manual override:\n\n{ex.Message}",
                         "Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
                 }
             }
         }

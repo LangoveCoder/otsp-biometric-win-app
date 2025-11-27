@@ -36,20 +36,20 @@ namespace BiometricSuperAdmin.Views
 
                 if (colleges.Count == 0)
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         "No colleges found!\n\nPlease create colleges first from the 'Manage Colleges' page.",
                         "No Colleges",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error loading colleges:\n\n{ex.Message}",
                     "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -81,22 +81,22 @@ namespace BiometricSuperAdmin.Views
                 }
                 else if (collegeTests.Count == 0)
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"No tests found for {_selectedCollege?.Name}!\n\nPlease create a test for this college first.",
                         "No Tests",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                 }
 
                 ValidateForm();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error loading tests:\n\n{ex.Message}",
                     "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -115,21 +115,21 @@ namespace BiometricSuperAdmin.Views
         {
             if (_selectedCollege == null || _selectedTest == null)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please select both college and test.",
                     "Validation Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(LaptopIdTextBox.Text))
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please enter a Laptop ID.",
                     "Validation Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
@@ -147,15 +147,15 @@ namespace BiometricSuperAdmin.Views
             RegistrationContext.SaveContext(context);
 
             // Show success and navigate to registration
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 $"Registration context set successfully!\n\n" +
                 $"College: {context.CollegeName}\n" +
                 $"Test: {context.TestName}\n" +
                 $"Laptop: {context.LaptopId}\n\n" +
                 $"All registrations will now use this context.",
                 "Context Set",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
 
             // Navigate to registration page
             NavigationService?.Navigate(new RegistrationView());
@@ -179,14 +179,14 @@ namespace BiometricSuperAdmin.Views
 
         private void ChangeContextButton_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show(
+            var result = System.Windows.MessageBox.Show(
                 "Are you sure you want to change the registration context?\n\n" +
                 "This should only be done when moving to a different college or test.",
                 "Confirm Change",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
 
-            if (result == MessageBoxResult.Yes)
+            if (result == System.Windows.MessageBoxResult.Yes)
             {
                 RegistrationContext.ClearContext();
                 CurrentContextPanel.Visibility = Visibility.Collapsed;

@@ -12,9 +12,6 @@ using BiometricCommon.Encryption;
 
 namespace BiometricCommon.Services
 {
-    /// <summary>
-    /// Service for generating college-specific verification packages
-    /// </summary>
     public class PackageGenerationService
     {
         private readonly BiometricContext _context;
@@ -24,9 +21,6 @@ namespace BiometricCommon.Services
             _context = new BiometricContext();
         }
 
-        /// <summary>
-        /// Get list of all colleges with student counts
-        /// </summary>
         public async Task<List<CollegePackageInfo>> GetCollegesWithStudentCountsAsync()
         {
             var colleges = await _context.Colleges
@@ -43,9 +37,6 @@ namespace BiometricCommon.Services
             return colleges;
         }
 
-        /// <summary>
-        /// Get tests for a specific college
-        /// </summary>
         public async Task<List<TestPackageInfo>> GetTestsForCollegeAsync(int collegeId)
         {
             var tests = await _context.Tests
@@ -62,9 +53,6 @@ namespace BiometricCommon.Services
             return tests;
         }
 
-        /// <summary>
-        /// Generate a verification package for a college
-        /// </summary>
         public async Task<PackageGenerationResult> GeneratePackageAsync(
             int collegeId,
             int testId,
@@ -80,7 +68,6 @@ namespace BiometricCommon.Services
             {
                 progress?.Report(new PackageProgress { Message = "Loading college and test information...", Percentage = 5 });
 
-                // Get college and test info
                 var college = await _context.Colleges.FindAsync(collegeId);
                 var test = await _context.Tests.FindAsync(testId);
 
@@ -96,7 +83,6 @@ namespace BiometricCommon.Services
 
                 progress?.Report(new PackageProgress { Message = "Filtering students...", Percentage = 15 });
 
-                // Get students for this college and test
                 var students = await _context.Students
                     .Where(s => s.CollegeId == collegeId && s.TestId == testId)
                     .ToListAsync();
@@ -112,6 +98,42 @@ namespace BiometricCommon.Services
 
                 progress?.Report(new PackageProgress { Message = $"Found {students.Count} students...", Percentage = 25 });
 
+                // Normalize and validate output path
+                outputPath = Path.GetFullPath(outputPath);
+
+                // Check for invalid path patterns
+                if (outputPath.Contains("Sources=") || outputPath.Contains("Data\\Sources") ||
+                    outputPath.Length > 260 || outputPath.Contains("?") || outputPath.Contains("*"))
+                {
+                    // Use default location instead
+                    string defaultDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    outputPath = Path.Combine(defaultDir, $"{college.Code}_Package_{DateTime.Now:yyyyMMddHHmmss}.zip");
+                }
+
+                string outputDirectory = Path.GetDirectoryName(outputPath);
+
+                if (string.IsNullOrEmpty(outputDirectory))
+                {
+                    outputDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    outputPath = Path.Combine(outputDirectory, $"{college.Code}_Package_{DateTime.Now:yyyyMMddHHmmss}.zip");
+                }
+
+                // Create output directory if it doesn't exist
+                if (!Directory.Exists(outputDirectory))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(outputDirectory);
+                    }
+                    catch
+                    {
+                        // If we can't create the directory, use Desktop
+                        outputDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                        outputPath = Path.Combine(outputDirectory, $"{college.Code}_Package_{DateTime.Now:yyyyMMddHHmmss}.zip");
+                        Directory.CreateDirectory(outputDirectory);
+                    }
+                }
+
                 // Create temporary directory for package contents
                 string tempDir = Path.Combine(Path.GetTempPath(), $"BiometricPackage_{Guid.NewGuid()}");
                 Directory.CreateDirectory(tempDir);
@@ -120,24 +142,21 @@ namespace BiometricCommon.Services
                 {
                     progress?.Report(new PackageProgress { Message = "Creating college database...", Percentage = 35 });
 
-                    // Create college-specific database
                     string collegeDbPath = Path.Combine(tempDir, "CollegeData.db");
                     await CreateCollegeDatabaseAsync(college, test, students, collegeDbPath, progress);
 
                     progress?.Report(new PackageProgress { Message = "Encrypting database...", Percentage = 60 });
 
-                    // Encrypt the database
                     string encryptedDbPath = Path.Combine(tempDir, "CollegeData.encrypted");
                     string encryptionKey = EncryptionService.GenerateCollegeKey(college.Code, test.Code);
                     EncryptionService.EncryptFile(collegeDbPath, encryptedDbPath, encryptionKey);
 
-                    // Delete unencrypted database
-                    File.Delete(collegeDbPath);
+                    if (File.Exists(collegeDbPath))
+                        File.Delete(collegeDbPath);
 
                     progress?.Report(new PackageProgress { Message = "Creating package metadata...", Percentage = 70 });
 
-                    // Create package info file
-                    var packageInfo = new PackageInfo
+                    var packageInfo = new PackageInfoData
                     {
                         CollegeId = college.Id,
                         CollegeName = college.Name,
@@ -152,31 +171,38 @@ namespace BiometricCommon.Services
                     };
 
                     string packageInfoJson = JsonSerializer.Serialize(packageInfo, new JsonSerializerOptions { WriteIndented = true });
-                    string encryptedInfoPath = Path.Combine(tempDir, "PackageInfo.encrypted");
-                    File.WriteAllText(Path.Combine(tempDir, "PackageInfo.json"), packageInfoJson);
+                    string packageInfoPath = Path.Combine(tempDir, "PackageInfo.json");
+                    File.WriteAllText(packageInfoPath, packageInfoJson);
 
-                    // Encrypt package info
-                    EncryptionService.EncryptFile(
-                        Path.Combine(tempDir, "PackageInfo.json"),
-                        encryptedInfoPath,
-                        encryptionKey);
-                    File.Delete(Path.Combine(tempDir, "PackageInfo.json"));
+                    string encryptedInfoPath = Path.Combine(tempDir, "PackageInfo.encrypted");
+                    EncryptionService.EncryptFile(packageInfoPath, encryptedInfoPath, encryptionKey);
+
+                    if (File.Exists(packageInfoPath))
+                        File.Delete(packageInfoPath);
 
                     progress?.Report(new PackageProgress { Message = "Creating README file...", Percentage = 75 });
 
-                    // Create README file
                     CreateReadmeFile(tempDir, college, test, students.Count);
 
                     progress?.Report(new PackageProgress { Message = "Creating installation script...", Percentage = 80 });
 
-                    // Create installation script
                     CreateInstallScript(tempDir, college.Code);
 
                     progress?.Report(new PackageProgress { Message = "Creating ZIP package...", Percentage = 85 });
 
-                    // Create ZIP file
+                    // Delete existing file if it exists
                     if (File.Exists(outputPath))
-                        File.Delete(outputPath);
+                    {
+                        try
+                        {
+                            File.Delete(outputPath);
+                        }
+                        catch
+                        {
+                            // If we can't delete, use a different filename
+                            outputPath = Path.Combine(outputDirectory, $"{college.Code}_Package_{DateTime.Now:yyyyMMddHHmmss_fff}.zip");
+                        }
+                    }
 
                     ZipFile.CreateFromDirectory(tempDir, outputPath);
 
@@ -191,7 +217,16 @@ namespace BiometricCommon.Services
                 {
                     // Cleanup temp directory
                     if (Directory.Exists(tempDir))
-                        Directory.Delete(tempDir, true);
+                    {
+                        try
+                        {
+                            Directory.Delete(tempDir, true);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup errors
+                        }
+                    }
                 }
 
                 result.EndTime = DateTime.Now;
@@ -206,9 +241,6 @@ namespace BiometricCommon.Services
             return result;
         }
 
-        /// <summary>
-        /// Create a college-specific database with filtered students
-        /// </summary>
         private async Task CreateCollegeDatabaseAsync(
             College college,
             Test test,
@@ -218,12 +250,10 @@ namespace BiometricCommon.Services
         {
             using (var collegeContext = new BiometricContext($"Data Source={dbPath}"))
             {
-                // Ensure database is created
                 await collegeContext.Database.EnsureCreatedAsync();
 
                 progress?.Report(new PackageProgress { Message = "Copying college information...", Percentage = 40 });
 
-                // Add college
                 collegeContext.Colleges.Add(new College
                 {
                     Id = college.Id,
@@ -239,7 +269,6 @@ namespace BiometricCommon.Services
 
                 progress?.Report(new PackageProgress { Message = "Copying test information...", Percentage = 45 });
 
-                // Add test
                 collegeContext.Tests.Add(new Test
                 {
                     Id = test.Id,
@@ -258,7 +287,6 @@ namespace BiometricCommon.Services
 
                 progress?.Report(new PackageProgress { Message = $"Copying {students.Count} students...", Percentage = 50 });
 
-                // Add students
                 foreach (var student in students)
                 {
                     collegeContext.Students.Add(new Student
@@ -278,9 +306,6 @@ namespace BiometricCommon.Services
             }
         }
 
-        /// <summary>
-        /// Create README file with installation instructions
-        /// </summary>
         private void CreateReadmeFile(string tempDir, College college, Test test, int studentCount)
         {
             string readmeContent = $@"
@@ -300,9 +325,7 @@ INSTALLATION INSTRUCTIONS:
 
 Windows Installation:
 1. Double-click 'Install.bat' to install automatically
-   OR
-2. Copy all files to a folder on your computer
-3. Run BiometricCollegeVerify.exe
+2. OR copy all files to a folder and run BiometricCollegeVerify.exe
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -321,15 +344,11 @@ SYSTEM REQUIREMENTS:
 
 • Windows 10 or later
 • .NET 8.0 Runtime
-• Fingerprint scanner (compatible with system)
 • 100 MB free disk space
 
 ═══════════════════════════════════════════════════════════════════
 
 SUPPORT:
-═══════════════════════════════════════════════════════════════════
-
-For technical support, contact your system administrator.
 
 College Contact: {college.ContactPerson}
 Email: {college.ContactEmail}
@@ -354,9 +373,6 @@ Version: 1.0
             File.WriteAllText(Path.Combine(tempDir, "README.txt"), readmeContent);
         }
 
-        /// <summary>
-        /// Create installation batch script
-        /// </summary>
         private void CreateInstallScript(string tempDir, string collegeCode)
         {
             string installScript = $@"@echo off
@@ -393,9 +409,6 @@ pause
             File.WriteAllText(Path.Combine(tempDir, "Install.bat"), installScript);
         }
 
-        /// <summary>
-        /// Generate a report of package generation
-        /// </summary>
         public string GeneratePackageReport(PackageGenerationResult result)
         {
             var report = new System.Text.StringBuilder();
@@ -428,8 +441,6 @@ pause
         }
     }
 
-    #region Helper Classes
-
     public class CollegePackageInfo
     {
         public int CollegeId { get; set; }
@@ -446,7 +457,7 @@ pause
         public int StudentCount { get; set; }
     }
 
-    public class PackageInfo
+    public class PackageInfoData
     {
         public int CollegeId { get; set; }
         public string CollegeName { get; set; } = string.Empty;
@@ -478,6 +489,4 @@ pause
         public string Message { get; set; } = string.Empty;
         public int Percentage { get; set; }
     }
-
-    #endregion
 }

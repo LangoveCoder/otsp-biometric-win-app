@@ -30,13 +30,13 @@ namespace BiometricCollegeVerify
             else
             {
                 // Show welcome message
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Welcome to the Biometric Verification System!\n\n" +
                     "Please import your college verification package to begin.\n\n" +
                     "Go to: File → Import College Package",
                     "Welcome",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
             }
         }
 
@@ -47,12 +47,12 @@ namespace BiometricCollegeVerify
 
             if (!_importService.IsPackageImported())
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please import college package first.\n\n" +
                     "Go to: File → Import College Package",
                     "No Package Loaded",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
 
                 NavigationListBox.SelectedIndex = 0;
                 return;
@@ -86,35 +86,35 @@ namespace BiometricCollegeVerify
 
                     if (result.Success)
                     {
-                        MessageBox.Show(
+                        System.Windows.MessageBox.Show(
                             $"✅ Package imported successfully!\n\n" +
                             $"College: {result.CollegeName}\n" +
                             $"Test: {result.TestName}\n" +
                             $"Students: {result.TotalStudents}\n\n" +
                             "You can now start verifying students.",
                             "Import Successful",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Information);
 
                         LoadCollegeInfo();
                         MainContentFrame.Navigate(new VerificationView());
                     }
                     else
                     {
-                        MessageBox.Show(
+                        System.Windows.MessageBox.Show(
                             $"❌ Import failed!\n\n{result.ErrorMessage}",
                             "Import Failed",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"Error importing package:\n\n{ex.Message}",
                         "Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
                 }
             }
         }
@@ -140,7 +140,7 @@ namespace BiometricCollegeVerify
 
         private void UserGuide_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 "📖 User Guide\n\n" +
                 "1. Import: File → Import College Package\n" +
                 "2. Verification: Place finger on scanner\n" +
@@ -148,13 +148,13 @@ namespace BiometricCollegeVerify
                 "4. Reports: View verification logs\n\n" +
                 "For detailed help, contact your administrator.",
                 "User Guide",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
         }
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 "✓ Biometric Verification System\n\n" +
                 "Version: 1.0.0\n" +
                 "College Verification Application\n\n" +
@@ -162,8 +162,8 @@ namespace BiometricCollegeVerify
                 "students using biometric fingerprint authentication.\n\n" +
                 "© 2024 - All Rights Reserved",
                 "About",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

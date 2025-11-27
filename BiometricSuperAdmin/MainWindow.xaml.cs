@@ -28,34 +28,34 @@ namespace BiometricSuperAdmin
             {
                 if (MasterConfigService.AutoImportFileExists())
                 {
-                    var result = MessageBox.Show(
+                    var result = System.Windows.MessageBox.Show(
                         "✨ Master configuration file detected!\n\n" +
                         "Do you want to import colleges and tests automatically?\n\n" +
                         "📋 This will setup your laptop with all colleges and tests.",
                         "Auto-Import Configuration",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
+                        System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Question);
 
-                    if (result == MessageBoxResult.Yes)
+                    if (result == System.Windows.MessageBoxResult.Yes)
                     {
                         try
                         {
                             var importResult = await _configService.ImportMasterConfigAsync(
                                 MasterConfigService.GetAutoImportFilePath());
 
-                            MessageBox.Show(
+                            System.Windows.MessageBox.Show(
                                 importResult.GetSummary(),
                                 importResult.Success ? "✅ Import Successful" : "❌ Import Failed",
-                                MessageBoxButton.OK,
-                                importResult.Success ? MessageBoxImage.Information : MessageBoxImage.Error);
+                                System.Windows.MessageBoxButton.OK,
+                                importResult.Success ? System.Windows.MessageBoxImage.Information : System.Windows.MessageBoxImage.Error);
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show(
+                            System.Windows.MessageBox.Show(
                                 $"Failed to auto-import configuration:\n\n{ex.Message}",
                                 "Import Error",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                                System.Windows.MessageBoxButton.OK,
+                                System.Windows.MessageBoxImage.Error);
                         }
                     }
                 }
@@ -88,12 +88,12 @@ namespace BiometricSuperAdmin
                 var context = RegistrationContext.GetCurrentContext();
                 if (context == null)
                 {
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         "Please set registration context first!\n\n" +
                         "Go to Dashboard and set which college and test you're registering for.",
                         "Context Not Set",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
 
                     NavigationListBox.SelectedIndex = 0;
                     return;
@@ -128,22 +128,22 @@ namespace BiometricSuperAdmin
                 {
                     var result = await _configService.ExportMasterConfigAsync(saveDialog.FileName);
 
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"✅ {result}\n\n" +
                         $"📁 File saved to:\n{saveDialog.FileName}\n\n" +
                         $"💡 Copy this file to USB and distribute to all registration laptops.",
                         "Export Successful",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Failed to export configuration:\n\n{ex.Message}",
                     "Export Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -161,11 +161,11 @@ namespace BiometricSuperAdmin
                 {
                     var importResult = await _configService.ImportMasterConfigAsync(openDialog.FileName);
 
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         importResult.GetSummary(),
                         importResult.Success ? "✅ Import Successful" : "❌ Import Failed",
-                        MessageBoxButton.OK,
-                        importResult.Success ? MessageBoxImage.Information : MessageBoxImage.Error);
+                        System.Windows.MessageBoxButton.OK,
+                        importResult.Success ? System.Windows.MessageBoxImage.Information : System.Windows.MessageBoxImage.Error);
 
                     if (importResult.Success)
                     {
@@ -179,11 +179,11 @@ namespace BiometricSuperAdmin
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Failed to import configuration:\n\n{ex.Message}",
                     "Import Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -199,22 +199,22 @@ namespace BiometricSuperAdmin
 
         private void ClearContextMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show(
+            var result = System.Windows.MessageBox.Show(
                 "Are you sure you want to clear the registration context?\n\n" +
                 "You will need to set it again before registering students.",
                 "Confirm Clear Context",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
 
-            if (result == MessageBoxResult.Yes)
+            if (result == System.Windows.MessageBoxResult.Yes)
             {
                 RegistrationContext.ClearContext();
                 Title = "Biometric Verification System - SuperAdmin";
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Registration context cleared successfully!",
                     "Context Cleared",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
 
                 MainContentFrame.Navigate(new RegistrationContextView());
             }
@@ -235,26 +235,26 @@ namespace BiometricSuperAdmin
                 {
                     _databaseService.BackupDatabase(saveDialog.FileName);
 
-                    MessageBox.Show(
+                    System.Windows.MessageBox.Show(
                         $"✅ Database backed up successfully!\n\n📁 Location:\n{saveDialog.FileName}",
                         "Backup Complete",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Failed to backup database:\n\n{ex.Message}",
                     "Backup Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
         private void UserGuideMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 "📖 User Guide\n\n" +
                 "1. Setup: Create colleges and tests (or import configuration)\n" +
                 "2. Context: Set registration context (College + Test + Laptop ID)\n" +
@@ -264,13 +264,13 @@ namespace BiometricSuperAdmin
                 "6. Package: Generate verification packages for colleges\n\n" +
                 "For detailed help, refer to the documentation.",
                 "User Guide",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
         }
 
         private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 "🔐 Biometric Verification System\n\n" +
                 "Version: 1.0.0\n" +
                 "Build Date: November 2024\n\n" +
@@ -281,8 +281,8 @@ namespace BiometricSuperAdmin
                 "• Verification package generation\n\n" +
                 "© 2024 - All Rights Reserved",
                 "About",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
         }
 
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
@@ -292,13 +292,13 @@ namespace BiometricSuperAdmin
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            var result = MessageBox.Show(
+            var result = System.Windows.MessageBox.Show(
                 "Are you sure you want to exit the application?",
                 "Confirm Exit",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
 
-            if (result == MessageBoxResult.No)
+            if (result == System.Windows.MessageBoxResult.No)
             {
                 e.Cancel = true;
                 return;

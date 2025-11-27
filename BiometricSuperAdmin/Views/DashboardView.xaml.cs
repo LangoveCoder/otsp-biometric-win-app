@@ -44,7 +44,7 @@ namespace BiometricSuperAdmin.Views
                 var colleges = await _databaseService.GetAllCollegesAsync();
                 if (colleges.Count == 0)
                 {
-                    var result = MessageBox.Show(
+                    var result = System.Windows.MessageBox.Show(
                         "The database is empty. Would you like to add sample data?\n\n" +
                         "This will create:\n" +
                         "• 5 colleges\n" +
@@ -52,10 +52,10 @@ namespace BiometricSuperAdmin.Views
                         "• 100+ sample students\n" +
                         "• Verification logs",
                         "Add Sample Data?",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
+                        System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Question);
 
-                    if (result == MessageBoxResult.Yes)
+                    if (result == System.Windows.MessageBoxResult.Yes)
                     {
                         await SeedSampleDataAsync();
                     }
@@ -75,11 +75,11 @@ namespace BiometricSuperAdmin.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error loading dashboard data:\n\n{ex.Message}",
                     "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
             finally
             {
@@ -98,23 +98,23 @@ namespace BiometricSuperAdmin.Views
 
                 await SampleDataSeeder.SeedSampleDataAsync(_databaseService);
 
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Sample data added successfully!\n\n" +
                     "• 5 Colleges created\n" +
                     "• 3 Tests created\n" +
                     "• 100+ Students registered\n" +
                     "• Verification logs added",
                     "Success",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error adding sample data:\n\n{ex.Message}",
                     "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
             finally
             {
@@ -157,11 +157,11 @@ namespace BiometricSuperAdmin.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error loading recent activity:\n\n{ex.Message}",
                     "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
