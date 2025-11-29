@@ -52,23 +52,27 @@ namespace BiometricCollegeVerify.Views
         {
             try
             {
-                // Disable button during verification
                 VerifyButton.IsEnabled = false;
-                InstructionText.Text = "Scanning fingerprint...";
+                InstructionText.Text = "Place finger on scanner...";
 
-                // TODO: Replace with actual fingerprint scanner capture
-                // For now, simulate fingerprint capture
-                await System.Threading.Tasks.Task.Delay(1000); // Simulate scanner delay
+                byte[]? fingerprintTemplate = await _verificationService.CaptureFingerprintAsync();
 
-                byte[] fingerprintTemplate = _verificationService.SimulateFingerprintCapture();
+                if (fingerprintTemplate == null)
+                {
+                    System.Windows.MessageBox.Show(
+                        "Failed to capture fingerprint!\n\nPlease ensure scanner is connected.",
+                        "Capture Failed",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
+                    return;
+                }
 
-                // Perform verification
+                InstructionText.Text = "Matching fingerprint...";
+
                 var result = await _verificationService.VerifyStudentAsync(fingerprintTemplate, "System");
 
-                // Show result
                 ShowVerificationResult(result);
 
-                // Refresh statistics
                 await LoadStatisticsAsync();
             }
             catch (Exception ex)
@@ -93,13 +97,11 @@ namespace BiometricCollegeVerify.Views
 
             if (result.IsSuccessful)
             {
-                // Success
                 StatusIcon.Text = "✓";
-                StatusIcon.Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80)); // Green
+                StatusIcon.Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80));
                 StatusText.Text = "VERIFIED";
                 StatusText.Foreground = new SolidColorBrush(Color.FromRgb(76, 175, 80));
 
-                // Show student info
                 if (result.Student != null)
                 {
                     StudentInfoPanel.Visibility = Visibility.Visible;
@@ -112,9 +114,8 @@ namespace BiometricCollegeVerify.Views
             }
             else
             {
-                // Failed
                 StatusIcon.Text = "✗";
-                StatusIcon.Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54)); // Red
+                StatusIcon.Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 StatusText.Text = "NOT VERIFIED";
                 StatusText.Foreground = new SolidColorBrush(Color.FromRgb(244, 67, 54));
 
@@ -131,7 +132,6 @@ namespace BiometricCollegeVerify.Views
 
         private async void ManualOverrideButton_Click(object sender, RoutedEventArgs e)
         {
-            // Create manual override dialog
             var dialog = new Window
             {
                 Title = "Manual Override",
@@ -148,7 +148,6 @@ namespace BiometricCollegeVerify.Views
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            // Roll Number
             var rollLabel = new TextBlock { Text = "Roll Number:", Margin = new Thickness(0, 0, 0, 8) };
             Grid.SetRow(rollLabel, 0);
 
@@ -161,7 +160,6 @@ namespace BiometricCollegeVerify.Views
             };
             Grid.SetRow(rollTextBox, 1);
 
-            // Remarks
             var remarksLabel = new TextBlock { Text = "Remarks:", Margin = new Thickness(0, 0, 0, 8) };
             Grid.SetRow(remarksLabel, 2);
 
@@ -176,7 +174,6 @@ namespace BiometricCollegeVerify.Views
             };
             Grid.SetRow(remarksTextBox, 3);
 
-            // Buttons
             var buttonPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,

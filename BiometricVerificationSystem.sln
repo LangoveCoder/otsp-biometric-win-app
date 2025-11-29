@@ -9,27 +9,59 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricCommon", "Biometri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricCollegeVerify", "BiometricCollegeVerify\BiometricCollegeVerify.csproj", "{263157BC-5474-CBCA-71A9-753274AFD239}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK", "SDK", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Secugen", "Secugen", "{1A58B8B3-3AA3-412E-8B61-D138B42714A2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x64", "x64", "{77E0CE82-E39D-4C26-9A0C-479C29855463}"
+	ProjectSection(SolutionItems) = preProject
+		D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\DotNET\Bin\x64\SecuGen.FDxSDKPro.DotNet.Windows.dll = D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\DotNET\Bin\x64\SecuGen.FDxSDKPro.DotNet.Windows.dll
+		D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgbledev.dll = D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgbledev.dll
+		D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgfdusdax64.dll = D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgfdusdax64.dll
+		D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgfpamx.dll = D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgfpamx.dll
+		D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgfplib.dll = D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgfplib.dll
+		D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgwsqlib.dll = D:\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\bin\x64\sgwsqlib.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{84500744-5EFE-4322-960D-969F787C6227}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{84500744-5EFE-4322-960D-969F787C6227}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84500744-5EFE-4322-960D-969F787C6227}.Debug|x64.ActiveCfg = Debug|x64
+		{84500744-5EFE-4322-960D-969F787C6227}.Debug|x64.Build.0 = Debug|x64
 		{84500744-5EFE-4322-960D-969F787C6227}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84500744-5EFE-4322-960D-969F787C6227}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84500744-5EFE-4322-960D-969F787C6227}.Release|x64.ActiveCfg = Release|x64
+		{84500744-5EFE-4322-960D-969F787C6227}.Release|x64.Build.0 = Release|x64
 		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|x64.ActiveCfg = Debug|x64
+		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|x64.Build.0 = Debug|x64
 		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|x64.ActiveCfg = Release|x64
+		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|x64.Build.0 = Release|x64
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|x64.ActiveCfg = Debug|x64
+		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|x64.Build.0 = Debug|x64
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|Any CPU.Build.0 = Release|Any CPU
+		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|x64.ActiveCfg = Release|x64
+		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1A58B8B3-3AA3-412E-8B61-D138B42714A2} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{77E0CE82-E39D-4C26-9A0C-479C29855463} = {1A58B8B3-3AA3-412E-8B61-D138B42714A2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F35B62EF-2890-4DB9-AB63-D02F9DE0722C}

@@ -4,24 +4,20 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using BiometricCommon.Models;
 using BiometricCommon.Database;
+using BiometricCommon.Fingerprint;
 
 namespace BiometricCollegeVerify.Services
 {
-    /// <summary>
-    /// Service for student verification
-    /// </summary>
     public class VerificationService
     {
         private readonly string _databasePath;
+        private IFingerprintScanner? _scanner;
 
         public VerificationService(string databasePath)
         {
             _databasePath = databasePath;
         }
 
-        /// <summary>
-        /// Verify a student by fingerprint
-        /// </summary>
         public async Task<VerificationResult> VerifyStudentAsync(byte[] fingerprintTemplate, string verifiedBy = "System")
         {
             var result = new VerificationResult
@@ -33,9 +29,8 @@ namespace BiometricCollegeVerify.Services
 
             try
             {
-                using (var context = new BiometricContext($"Data Source={_databasePath}"))
+                using (var context = new BiometricContext(_databasePath))
                 {
-                    // Get all students
                     var students = await context.Students
                         .Include(s => s.College)
                         .Include(s => s.Test)
@@ -47,33 +42,53 @@ namespace BiometricCollegeVerify.Services
                         return result;
                     }
 
-                    // Match fingerprint
-                    var matchResult = MatchFingerprint(fingerprintTemplate, students);
+                    if (_scanner == null)
+                    {
+                        _scanner = ScannerFactory.GetAvailableScanner();
+                        if (_scanner != null)
+                        {
+                            await _scanner.InitializeAsync();
+                        }
+                    }
 
-                    if (matchResult.Matched)
+                    Student? matchedStudent = null;
+                    int bestScore = 0;
+
+                    if (_scanner != null)
+                    {
+                        foreach (var student in students)
+                        {
+                            if (student.FingerprintTemplate == null) continue;
+
+                            var matchResult = await _scanner.MatchAsync(fingerprintTemplate, student.FingerprintTemplate);
+
+                            if (matchResult.Success && matchResult.IsMatch)
+                            {
+                                matchedStudent = student;
+                                bestScore = matchResult.MatchScore;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (matchedStudent != null)
                     {
                         result.IsSuccessful = true;
-                        result.Student = matchResult.Student;
-                        result.MatchConfidence = matchResult.Confidence;
+                        result.Student = matchedStudent;
+                        result.MatchConfidence = bestScore;
                         result.VerificationType = "Biometric";
                         result.Message = "Student verified successfully";
 
-                        // Update student verification status
-                        var student = await context.Students.FindAsync(matchResult.Student!.Id);
-                        if (student != null)
-                        {
-                            student.IsVerified = true;
-                            student.VerificationDate = DateTime.Now;
-                        }
+                        matchedStudent.IsVerified = true;
+                        matchedStudent.VerificationDate = DateTime.Now;
 
-                        // Log verification
                         var log = new VerificationLog
                         {
-                            StudentId = matchResult.Student!.Id,
+                            StudentId = matchedStudent.Id,
                             VerificationDateTime = DateTime.Now,
                             IsSuccessful = true,
                             VerificationType = "Biometric",
-                            MatchConfidence = matchResult.Confidence,
+                            MatchConfidence = bestScore,
                             VerifiedBy = verifiedBy,
                             Remarks = "Fingerprint matched successfully"
                         };
@@ -83,20 +98,17 @@ namespace BiometricCollegeVerify.Services
                     }
                     else
                     {
-                        result.IsSuccessful = false;
                         result.Message = "Fingerprint not matched";
-                        result.VerificationType = "Biometric";
 
-                        // Log failed attempt (without student ID)
                         var log = new VerificationLog
                         {
-                            StudentId = 0, // No student matched
+                            StudentId = 0,
                             VerificationDateTime = DateTime.Now,
                             IsSuccessful = false,
                             VerificationType = "Biometric",
                             MatchConfidence = 0,
                             VerifiedBy = verifiedBy,
-                            Remarks = "Fingerprint not matched in database"
+                            Remarks = "Fingerprint not matched"
                         };
 
                         context.VerificationLogs.Add(log);
@@ -106,16 +118,12 @@ namespace BiometricCollegeVerify.Services
             }
             catch (Exception ex)
             {
-                result.IsSuccessful = false;
                 result.Message = $"Verification error: {ex.Message}";
             }
 
             return result;
         }
 
-        /// <summary>
-        /// Manual override verification
-        /// </summary>
         public async Task<VerificationResult> ManualOverrideAsync(string rollNumber, string verifiedBy, string remarks)
         {
             var result = new VerificationResult
@@ -128,7 +136,7 @@ namespace BiometricCollegeVerify.Services
 
             try
             {
-                using (var context = new BiometricContext($"Data Source={_databasePath}"))
+                using (var context = new BiometricContext(_databasePath))
                 {
                     var student = await context.Students
                         .Include(s => s.College)
@@ -141,11 +149,9 @@ namespace BiometricCollegeVerify.Services
                         return result;
                     }
 
-                    // Update student
                     student.IsVerified = true;
                     student.VerificationDate = DateTime.Now;
 
-                    // Log verification
                     var log = new VerificationLog
                     {
                         StudentId = student.Id,
@@ -173,16 +179,13 @@ namespace BiometricCollegeVerify.Services
             return result;
         }
 
-        /// <summary>
-        /// Get verification statistics
-        /// </summary>
         public async Task<VerificationStats> GetStatisticsAsync()
         {
             var stats = new VerificationStats();
 
             try
             {
-                using (var context = new BiometricContext($"Data Source={_databasePath}"))
+                using (var context = new BiometricContext(_databasePath))
                 {
                     stats.TotalStudents = await context.Students.CountAsync();
                     stats.VerifiedStudents = await context.Students.CountAsync(s => s.IsVerified);
@@ -208,14 +211,11 @@ namespace BiometricCollegeVerify.Services
             return stats;
         }
 
-        /// <summary>
-        /// Get recent verification logs
-        /// </summary>
         public async Task<System.Collections.Generic.List<VerificationLog>> GetRecentLogsAsync(int count = 50)
         {
             try
             {
-                using (var context = new BiometricContext($"Data Source={_databasePath}"))
+                using (var context = new BiometricContext(_databasePath))
                 {
                     return await context.VerificationLogs
                         .Include(l => l.Student)
@@ -230,74 +230,26 @@ namespace BiometricCollegeVerify.Services
             }
         }
 
-        /// <summary>
-        /// Match fingerprint against database
-        /// </summary>
-        private FingerprintMatchResult MatchFingerprint(byte[] capturedTemplate, System.Collections.Generic.List<Student> students)
+        public async Task<byte[]?> CaptureFingerprintAsync()
         {
-            var result = new FingerprintMatchResult
+            if (_scanner == null)
             {
-                Matched = false,
-                Confidence = 0
-            };
-
-            // TODO: Replace with actual fingerprint matching SDK
-            // For now, using simplified comparison
-
-            foreach (var student in students)
-            {
-                // Simulated fingerprint matching
-                // In production, use actual fingerprint SDK matching algorithm
-                int confidence = CompareFingerprints(capturedTemplate, student.FingerprintTemplate);
-
-                if (confidence >= 70) // Threshold for match
+                _scanner = ScannerFactory.GetAvailableScanner();
+                if (_scanner != null)
                 {
-                    result.Matched = true;
-                    result.Student = student;
-                    result.Confidence = confidence;
-                    return result;
+                    await _scanner.InitializeAsync();
                 }
             }
 
-            return result;
+            if (_scanner == null) return null;
+
+            var result = await _scanner.CaptureAsync();
+            return result.Success ? result.Template : null;
         }
 
-        /// <summary>
-        /// Compare two fingerprint templates
-        /// </summary>
-        private int CompareFingerprints(byte[] template1, byte[] template2)
+        public void Dispose()
         {
-            // PLACEHOLDER: Replace with actual fingerprint SDK comparison
-            // This is a simplified simulation
-
-            if (template1 == null || template2 == null)
-                return 0;
-
-            if (template1.Length != template2.Length)
-                return 0;
-
-            // Simple byte comparison (NOT REAL FINGERPRINT MATCHING)
-            int matches = 0;
-            for (int i = 0; i < Math.Min(template1.Length, template2.Length); i++)
-            {
-                if (template1[i] == template2[i])
-                    matches++;
-            }
-
-            // Calculate percentage match
-            return (int)((matches / (double)template1.Length) * 100);
-        }
-
-        /// <summary>
-        /// Simulate fingerprint capture (for testing without actual scanner)
-        /// </summary>
-        public byte[] SimulateFingerprintCapture()
-        {
-            // Generate random fingerprint template for testing
-            var random = new Random();
-            byte[] template = new byte[512];
-            random.NextBytes(template);
-            return template;
+            _scanner?.Dispose();
         }
     }
 
@@ -312,13 +264,6 @@ namespace BiometricCollegeVerify.Services
         public string VerificationType { get; set; } = string.Empty;
         public DateTime VerificationDateTime { get; set; }
         public string VerifiedBy { get; set; } = string.Empty;
-    }
-
-    public class FingerprintMatchResult
-    {
-        public bool Matched { get; set; }
-        public Student? Student { get; set; }
-        public int Confidence { get; set; }
     }
 
     public class VerificationStats

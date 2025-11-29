@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,4 +21,27 @@
     <Folder Include="Helpers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="SecuGen.FDxSDKPro.DotNet.Windows">
+      <HintPath>..\SDK\SecuGen\x64\SecuGen.FDxSDKPro.DotNet.Windows.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+	<ItemGroup>
+		<!-- Copy SecuGen native DLLs to output directory -->
+		<None Include="..\SDK\Secugen\x64\sgfplib.dll" Link="sgfplib.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\SDK\Secugen\x64\sgbledev.dll" Link="sgbledev.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\SDK\Secugen\x64\sgfdusdax64.dll" Link="sgfdusdax64.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\SDK\Secugen\x64\sgfpamx.dll" Link="sgfpamx.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\SDK\Secugen\x64\sgwsqlib.dll" Link="sgwsqlib.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>

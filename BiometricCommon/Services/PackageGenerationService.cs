@@ -237,6 +237,11 @@ namespace BiometricCommon.Services
                     if (File.Exists(packageInfoPath))
                         File.Delete(packageInfoPath);
 
+                    progress?.Report(new PackageProgress { Message = "Creating plain metadata...", Percentage = 72 });
+
+                    // Create plain metadata for key generation (NEW)
+                    CreatePlainMetadata(tempFolder, college.Code, test.Code);
+
                     progress?.Report(new PackageProgress { Message = "Creating README file...", Percentage = 75 });
 
                     CreateReadmeFile(tempFolder, college, test, students.Count);
@@ -404,6 +409,7 @@ PACKAGE CONTENTS:
 
 - CollegeData.encrypted    - Encrypted student database
 - PackageInfo.encrypted    - Package metadata
+- PackageMetadata.json     - Key generation data
 - Install.bat              - Automatic installer (Windows)
 - README.txt               - This file
 
@@ -479,6 +485,21 @@ pause
             File.WriteAllText(Path.Combine(tempDir, "Install.bat"), installScript);
         }
 
+        private void CreatePlainMetadata(string tempDir, string collegeCode, string testCode)
+        {
+            var plainMetadata = new
+            {
+                CollegeCode = collegeCode,
+                TestCode = testCode,
+                Version = "1.0",
+                Generated = DateTime.Now
+            };
+
+            string plainMetadataJson = JsonSerializer.Serialize(plainMetadata, new JsonSerializerOptions { WriteIndented = true });
+            string plainMetadataPath = Path.Combine(tempDir, "PackageMetadata.json");
+            File.WriteAllText(plainMetadataPath, plainMetadataJson);
+        }
+
         public string GeneratePackageReport(PackageGenerationResult result)
         {
             var report = new System.Text.StringBuilder();
@@ -510,6 +531,8 @@ pause
             return report.ToString();
         }
     }
+
+    #region Helper Classes
 
     public class CollegePackageInfo
     {
@@ -559,4 +582,6 @@ pause
         public string Message { get; set; } = string.Empty;
         public int Percentage { get; set; }
     }
+
+    #endregion
 }

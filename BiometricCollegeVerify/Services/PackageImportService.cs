@@ -56,7 +56,7 @@ namespace BiometricCollegeVerify.Services
                 }
 
                 // Create temp directory for extraction
-                string tempDir = Path.Combine(Path.GetTempPath(), $"BiometricImport_{Guid.NewGuid()}");
+                string tempDir = Path.Combine(Path.GetTempPath(), $"BiometricImport_{Guid.NewGuid():N}");
                 Directory.CreateDirectory(tempDir);
 
                 try
@@ -76,7 +76,7 @@ namespace BiometricCollegeVerify.Services
                     }
 
                     // Decrypt package info to get encryption key
-                    string packageInfoJson = await DecryptPackageInfoAsync(encryptedInfoPath);
+                    string packageInfoJson = await DecryptPackageInfoAsync(encryptedInfoPath, tempDir);
                     var packageInfo = JsonSerializer.Deserialize<PackageInfo>(packageInfoJson);
 
                     if (packageInfo == null)
@@ -118,7 +118,16 @@ namespace BiometricCollegeVerify.Services
                 {
                     // Cleanup temp directory
                     if (Directory.Exists(tempDir))
-                        Directory.Delete(tempDir, true);
+                    {
+                        try
+                        {
+                            Directory.Delete(tempDir, true);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup errors
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -133,34 +142,50 @@ namespace BiometricCollegeVerify.Services
         /// <summary>
         /// Decrypt package info file
         /// </summary>
-        private async Task<string> DecryptPackageInfoAsync(string encryptedPath)
+        private async Task<string> DecryptPackageInfoAsync(string encryptedPath, string tempDir)
         {
-            // Try common encryption keys (college code based)
-            // In a real implementation, you'd have a way to get the correct key
             try
             {
-                byte[] encryptedData = await File.ReadAllBytesAsync(encryptedPath);
+                // Check for plain metadata file
+                string plainMetadataPath = Path.Combine(tempDir, "PackageMetadata.json");
 
-                // Try to decrypt with various keys
-                // For now, we'll use a known key format
-                // In production, the key would be provided or derived
-
-                // Read the encrypted file and try to decrypt
-                // This is simplified - real implementation would need proper key management
-                string tempDecrypted = Path.GetTempFileName();
-
-                try
+                if (!File.Exists(plainMetadataPath))
                 {
-                    // Try to decrypt with standard key
-                    // Note: This would need to match the encryption key used in PackageGenerationService
-                    var content = File.ReadAllText(encryptedPath);
-                    return content; // Simplified for now
+                    throw new Exception("Package metadata not found. This may be an older package format.");
                 }
-                catch
+
+                // Read plain metadata to get codes for key generation
+                string metadataJson = await File.ReadAllTextAsync(plainMetadataPath);
+                using var metadataDoc = JsonSerializer.Deserialize<JsonDocument>(metadataJson);
+
+                if (metadataDoc == null)
                 {
-                    // If decryption fails, try alternative approaches
-                    throw new Exception("Could not decrypt package information");
+                    throw new Exception("Invalid package metadata format.");
                 }
+
+                string collegeCode = metadataDoc.RootElement.GetProperty("CollegeCode").GetString() ?? "";
+                string testCode = metadataDoc.RootElement.GetProperty("TestCode").GetString() ?? "";
+
+                if (string.IsNullOrEmpty(collegeCode) || string.IsNullOrEmpty(testCode))
+                {
+                    throw new Exception("College or test code missing from metadata.");
+                }
+
+                // Generate decryption key using the same method as generation
+                string decryptionKey = EncryptionService.GenerateCollegeKey(collegeCode, testCode);
+
+                // Decrypt the package info file
+                string decryptedPath = Path.Combine(tempDir, "PackageInfo_decrypted.json");
+                EncryptionService.DecryptFile(encryptedPath, decryptedPath, decryptionKey);
+
+                // Read and return decrypted JSON
+                string decryptedJson = await File.ReadAllTextAsync(decryptedPath);
+
+                // Clean up temp file
+                if (File.Exists(decryptedPath))
+                    File.Delete(decryptedPath);
+
+                return decryptedJson;
             }
             catch (Exception ex)
             {
@@ -175,13 +200,12 @@ namespace BiometricCollegeVerify.Services
         {
             try
             {
-                using (var context = new BiometricContext($"Data Source={dbPath}"))
+                using (var context = new BiometricContext(dbPath))
                 {
                     // Check if database can be opened
                     await context.Database.OpenConnectionAsync();
 
                     // Verify required tables exist
-                    var hasStudents = await context.Students.AnyAsync();
                     var hasColleges = await context.Colleges.AnyAsync();
                     var hasTests = await context.Tests.AnyAsync();
 

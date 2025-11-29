@@ -21,9 +21,7 @@ namespace BiometricCollegeVerify.Views
             _importService = new PackageImportService();
             _verificationService = new VerificationService(_importService.GetDatabasePath());
 
-            // Add value converters
-            Resources.Add("StatusColorConverter", new StatusColorConverter());
-            Resources.Add("StatusTextConverter", new StatusTextConverter());
+            // REMOVED: Resources.Add lines - converters now in XAML
 
             Loaded += ReportsView_Loaded;
         }

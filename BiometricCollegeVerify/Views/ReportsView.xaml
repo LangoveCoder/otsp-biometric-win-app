@@ -3,10 +3,17 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:BiometricCollegeVerify.Views"
       mc:Ignorable="d" 
       d:DesignHeight="600" d:DesignWidth="900"
       Title="ReportsView"
       Background="#FAFAFA">
+
+    <Page.Resources>
+        <!-- Add converters here in XAML -->
+        <local:StatusColorConverter x:Key="StatusColorConverter"/>
+        <local:StatusTextConverter x:Key="StatusTextConverter"/>
+    </Page.Resources>
 
     <Grid Margin="24">
         <Grid.RowDefinitions>

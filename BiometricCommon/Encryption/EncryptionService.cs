@@ -310,13 +310,16 @@ namespace BiometricCommon.Encryption
 
         /// <summary>
         /// Generates a unique encryption key for a college
+        /// FIXED: Removed DateTime.Now.Ticks to ensure consistent key generation
         /// </summary>
         /// <param name="collegeCode">College code</param>
         /// <param name="testCode">Test code</param>
         /// <returns>Unique encryption key</returns>
         public static string GenerateCollegeKey(string collegeCode, string testCode)
         {
-            string baseKey = $"{collegeCode}-{testCode}-{DateTime.Now.Ticks}";
+            // FIXED: Use only college and test codes - no timestamp
+            // This ensures the same key is generated during both encryption and decryption
+            string baseKey = $"BACT-{collegeCode}-{testCode}-2025";
             using (SHA256 sha256 = SHA256.Create())
             {
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(baseKey));
