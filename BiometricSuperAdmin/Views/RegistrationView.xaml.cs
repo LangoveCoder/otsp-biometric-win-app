@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using BiometricCommon.Models;
 using BiometricCommon.Services;
-using BiometricCommon.Fingerprint;
+using BiometricCommon.Scanners;
 
 namespace BiometricSuperAdmin.Views
 {
@@ -15,7 +15,7 @@ namespace BiometricSuperAdmin.Views
     {
         private readonly DatabaseService _databaseService;
         private RegContext? _currentContext;
-        private IFingerprintScanner? _scanner;
+        private FingerprintService? _fingerprintService;
 
         public RegistrationView()
         {
@@ -26,6 +26,7 @@ namespace BiometricSuperAdmin.Views
 
         private void RegistrationView_Loaded(object sender, RoutedEventArgs e)
         {
+            // Load registration context
             _currentContext = RegContext.GetCurrentContext();
 
             if (_currentContext == null)
@@ -38,14 +39,67 @@ namespace BiometricSuperAdmin.Views
                 return;
             }
 
+            // Display context info
             CollegeTextBox.Text = _currentContext.CollegeName;
             TestTextBox.Text = _currentContext.TestName;
             DeviceTextBox.Text = _currentContext.LaptopId;
+
+            // Initialize fingerprint scanner
+            InitializeScannerAsync();
         }
+
+        private async void InitializeScannerAsync()
+        {
+            try
+            {
+                _fingerprintService = new FingerprintService();
+
+                // Register SecuGen scanner
+                _fingerprintService.RegisterScanner(new SecuGenScanner());
+
+                // Try to initialize
+                var result = await _fingerprintService.AutoDetectScannerAsync();
+
+                if (result.Success)
+                {
+                    System.Windows.MessageBox.Show(
+                        $"Scanner connected successfully!\n\n{result.Message}",
+                        "Scanner Ready",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
+                }
+                else
+                {
+                    var fallbackResult = System.Windows.MessageBox.Show(
+                        $"Real scanner not detected:\n{result.Message}\n\n" +
+                        "Do you want to use simulated fingerprints for testing?",
+                        "Scanner Not Found",
+                        System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Question);
+
+                    if (fallbackResult == System.Windows.MessageBoxResult.Yes)
+                    {
+                        // Use mock scanner as fallback
+                        _fingerprintService.RegisterScanner(new MockFingerprintScanner());
+                        await _fingerprintService.AutoDetectScannerAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Scanner initialization error:\n\n{ex.Message}",
+                    "Error",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+            }
+        }
+
         private async void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                // Validate context
                 if (_currentContext == null)
                 {
                     System.Windows.MessageBox.Show(
@@ -56,6 +110,7 @@ namespace BiometricSuperAdmin.Views
                     return;
                 }
 
+                // Validate roll number
                 string rollNumber = RollNumberTextBox.Text.Trim();
                 if (string.IsNullOrWhiteSpace(rollNumber))
                 {
@@ -68,6 +123,7 @@ namespace BiometricSuperAdmin.Views
                     return;
                 }
 
+                // Check if student already registered
                 var existingStudent = _databaseService.GetStudentByRollNumber(rollNumber);
 
                 if (existingStudent != null)
@@ -83,70 +139,66 @@ namespace BiometricSuperAdmin.Views
                         return;
                 }
 
+                // Show loading
                 LoadingOverlay.Visibility = Visibility.Visible;
                 RegisterButton.IsEnabled = false;
 
-                if (_scanner == null)
+                // Capture fingerprint
+                byte[] fingerprintTemplate;
+
+                if (_fingerprintService != null && _fingerprintService.IsReady())
                 {
-                    _scanner = ScannerFactory.GetAvailableScanner();
-                    if (_scanner == null)
-                    {
-                        System.Windows.MessageBox.Show(
-                            "No fingerprint scanner detected!\n\n" +
-                            "Please ensure:\n" +
-                            "1. Scanner is connected via USB\n" +
-                            "2. Drivers are installed\n" +
-                            "3. Device appears in Device Manager",
-                            "Scanner Not Found",
-                            System.Windows.MessageBoxButton.OK,
-                            System.Windows.MessageBoxImage.Error);
-                        return;
-                    }
-
-                    bool initialized = await _scanner.InitializeAsync();
-                    if (!initialized)
-                    {
-                        System.Windows.MessageBox.Show(
-                            "Failed to initialize fingerprint scanner!",
-                            "Initialization Error",
-                            System.Windows.MessageBoxButton.OK,
-                            System.Windows.MessageBoxImage.Error);
-                        _scanner = null;
-                        return;
-                    }
-                }
-
-                System.Windows.MessageBox.Show(
-                    "Place your finger on the scanner now...",
-                    "Ready to Capture",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Information);
-
-                var captureResult = await _scanner.CaptureAsync();
-
-                if (!captureResult.Success)
-                {
+                    // Prompt user to place finger
                     System.Windows.MessageBox.Show(
-                        $"Fingerprint capture failed!\n\n{captureResult.ErrorMessage}",
-                        "Capture Failed",
+                        "Please place your finger on the scanner.",
+                        "Fingerprint Capture",
                         System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Error);
-                    return;
+                        System.Windows.MessageBoxImage.Information);
+
+                    // Capture from real scanner
+                    var captureResult = await _fingerprintService.CaptureAsync();
+
+                    if (!captureResult.Success)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"Fingerprint capture failed:\n\n{captureResult.Message}\n\n" +
+                            $"Quality Score: {captureResult.QualityScore}\n" +
+                            $"Reason: {captureResult.FailureReason}",
+                            "Capture Failed",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    fingerprintTemplate = captureResult.Template;
+
+                    System.Windows.MessageBox.Show(
+                        $"Fingerprint captured successfully!\n\n" +
+                        $"Quality Score: {captureResult.QualityScore}%",
+                        "Success",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
+                }
+                else
+                {
+                    // Fallback to simulated fingerprint
+                    fingerprintTemplate = SimulateFingerprintCapture();
                 }
 
+                // Register student
                 await _databaseService.RegisterStudentAsync(
                     rollNumber,
                     _currentContext.CollegeId,
                     _currentContext.TestId,
-                    captureResult.Template!);
+                    fingerprintTemplate);
 
                 System.Windows.MessageBox.Show(
-                    $"Student '{rollNumber}' registered successfully!\n\n" +
-                    $"Fingerprint Quality: {captureResult.Quality}",
+                    $"Student '{rollNumber}' registered successfully!",
                     "Success",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Information);
 
+                // Clear form for next student
                 RollNumberTextBox.Clear();
                 RollNumberTextBox.Focus();
             }
@@ -164,25 +216,26 @@ namespace BiometricSuperAdmin.Views
                 RegisterButton.IsEnabled = true;
             }
         }
+
+        /// <summary>
+        /// Simulate fingerprint capture for testing (fallback)
+        /// </summary>
+        private byte[] SimulateFingerprintCapture()
+        {
+            var data = $"FP-{DateTime.Now.Ticks}-{RollNumberTextBox.Text}";
+            return System.Text.Encoding.UTF8.GetBytes(data);
+        }
+
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             RollNumberTextBox.Clear();
             RollNumberTextBox.Focus();
         }
-
-        public void Dispose()
-        {
-            _scanner?.Dispose();
-        }
-
-        // P/Invoke declarations for direct DLL testing
-        [System.Runtime.InteropServices.DllImport("sgfplib.dll", CallingConvention = System.Runtime.InteropServices.CallingConvention.StdCall)]
-        private static extern int SGFPM_Create(ref IntPtr phDevice);
-
-        [System.Runtime.InteropServices.DllImport("sgfplib.dll", CallingConvention = System.Runtime.InteropServices.CallingConvention.StdCall)]
-        private static extern int SGFPM_Terminate(IntPtr hDevice);
     }
 
+    /// <summary>
+    /// Registration context helper class
+    /// </summary>
     public class RegContext
     {
         public int CollegeId { get; set; }
@@ -208,7 +261,10 @@ namespace BiometricSuperAdmin.Views
                     return JsonSerializer.Deserialize<RegContext>(json);
                 }
             }
-            catch { }
+            catch
+            {
+                // Ignore errors
+            }
             return null;
         }
 
@@ -222,7 +278,10 @@ namespace BiometricSuperAdmin.Views
                     Directory.CreateDirectory(directory);
                 }
 
-                var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+                var json = JsonSerializer.Serialize(this, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
                 File.WriteAllText(ContextFilePath, json);
             }
             catch (Exception ex)
@@ -240,7 +299,10 @@ namespace BiometricSuperAdmin.Views
                     File.Delete(ContextFilePath);
                 }
             }
-            catch { }
+            catch
+            {
+                // Ignore errors
+            }
         }
     }
 }

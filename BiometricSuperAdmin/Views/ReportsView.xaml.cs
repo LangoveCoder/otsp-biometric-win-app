@@ -1,22 +1,20 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using BiometricCollegeVerify.Services;
+using BiometricCommon.Database;
+using Microsoft.EntityFrameworkCore;
 
-namespace BiometricCollegeVerify.Views
+namespace BiometricSuperAdmin.Views
 {
     public partial class ReportsView : Page
     {
-        private readonly VerificationService _verificationService;
-        private readonly PackageImportService _importService;
+        private readonly BiometricContext _context;
 
         public ReportsView()
         {
             InitializeComponent();
-
-            _importService = new PackageImportService();
-            _verificationService = new VerificationService(_importService.GetDatabasePath());
-
+            _context = new BiometricContext();
             Loaded += ReportsView_Loaded;
         }
 
@@ -29,20 +27,29 @@ namespace BiometricCollegeVerify.Views
         {
             try
             {
-                var stats = await _verificationService.GetStatisticsAsync();
+                var totalStudents = await System.Threading.Tasks.Task.Run(() => _context.Students.Count());
+                var totalVerified = await System.Threading.Tasks.Task.Run(() => _context.Students.Count(s => s.IsVerified));
+                var totalPending = totalStudents - totalVerified;
 
-                TotalVerificationsText.Text = (stats.SuccessfulVerifications + stats.FailedVerifications).ToString();
-                SuccessfulText.Text = stats.SuccessfulVerifications.ToString();
-                FailedText.Text = stats.FailedVerifications.ToString();
+                TotalVerificationsText.Text = totalStudents.ToString();
+                SuccessfulText.Text = totalVerified.ToString();
+                FailedText.Text = totalPending.ToString();
 
                 double successRate = 0;
-                if (stats.SuccessfulVerifications + stats.FailedVerifications > 0)
+                if (totalStudents > 0)
                 {
-                    successRate = (stats.SuccessfulVerifications / (double)(stats.SuccessfulVerifications + stats.FailedVerifications)) * 100;
+                    successRate = (totalVerified / (double)totalStudents) * 100;
                 }
                 SuccessRateText.Text = $"{successRate:F1}%";
 
-                var logs = await _verificationService.GetRecentLogsAsync(100);
+                // Get verification logs directly
+                var logs = await System.Threading.Tasks.Task.Run(() =>
+                    _context.VerificationLogs
+                        .Include(l => l.Student)
+                        .OrderByDescending(l => l.VerificationDateTime)
+                        .Take(100)
+                        .ToList()
+                );
 
                 if (logs.Count > 0)
                 {

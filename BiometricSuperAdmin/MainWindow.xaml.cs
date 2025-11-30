@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using Microsoft.Win32;
 using BiometricSuperAdmin.Views;
 using BiometricCommon.Services;
-using BiometricCollegeVerify.Views;
+//using BiometricCollegeVerify.Views;
 
 namespace BiometricSuperAdmin
 {

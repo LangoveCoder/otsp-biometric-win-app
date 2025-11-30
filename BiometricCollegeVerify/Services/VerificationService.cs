@@ -4,18 +4,27 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using BiometricCommon.Models;
 using BiometricCommon.Database;
-using BiometricCommon.Fingerprint;
+using BiometricCommon.Services;
+using BiometricCommon.Scanners;
 
 namespace BiometricCollegeVerify.Services
 {
     public class VerificationService
     {
         private readonly string _databasePath;
-        private IFingerprintScanner? _scanner;
+        private FingerprintService? _fingerprintService;
 
         public VerificationService(string databasePath)
         {
             _databasePath = databasePath;
+            InitializeScanner();
+        }
+
+        private void InitializeScanner()
+        {
+            _fingerprintService = new FingerprintService();
+            _fingerprintService.RegisterScanner(new SecuGenScanner());
+            _fingerprintService.RegisterScanner(new MockFingerprintScanner());
         }
 
         public async Task<VerificationResult> VerifyStudentAsync(byte[] fingerprintTemplate, string verifiedBy = "System")
@@ -42,32 +51,31 @@ namespace BiometricCollegeVerify.Services
                         return result;
                     }
 
-                    if (_scanner == null)
+                    if (_fingerprintService == null || !_fingerprintService.IsReady())
                     {
-                        _scanner = ScannerFactory.GetAvailableScanner();
-                        if (_scanner != null)
+                        var initResult = await _fingerprintService!.AutoDetectScannerAsync();
+                        if (!initResult.Success)
                         {
-                            await _scanner.InitializeAsync();
+                            result.Message = "Scanner not available";
+                            return result;
                         }
                     }
 
                     Student? matchedStudent = null;
                     int bestScore = 0;
 
-                    if (_scanner != null)
+                    foreach (var student in students)
                     {
-                        foreach (var student in students)
+                        if (student.FingerprintTemplate == null) continue;
+
+                        var matchResult = await _fingerprintService!.VerifyAsync(student.FingerprintTemplate, fingerprintTemplate);
+
+                        if (matchResult.IsMatch && matchResult.ConfidenceScore > bestScore)
                         {
-                            if (student.FingerprintTemplate == null) continue;
+                            matchedStudent = student;
+                            bestScore = matchResult.ConfidenceScore;
 
-                            var matchResult = await _scanner.MatchAsync(fingerprintTemplate, student.FingerprintTemplate);
-
-                            if (matchResult.Success && matchResult.IsMatch)
-                            {
-                                matchedStudent = student;
-                                bestScore = matchResult.MatchScore;
-                                break;
-                            }
+                            if (bestScore >= 90) break;
                         }
                     }
 
@@ -232,24 +240,22 @@ namespace BiometricCollegeVerify.Services
 
         public async Task<byte[]?> CaptureFingerprintAsync()
         {
-            if (_scanner == null)
+            if (_fingerprintService == null || !_fingerprintService.IsReady())
             {
-                _scanner = ScannerFactory.GetAvailableScanner();
-                if (_scanner != null)
-                {
-                    await _scanner.InitializeAsync();
-                }
+                var initResult = await _fingerprintService!.AutoDetectScannerAsync();
+                if (!initResult.Success) return null;
             }
 
-            if (_scanner == null) return null;
-
-            var result = await _scanner.CaptureAsync();
+            var result = await _fingerprintService!.CaptureAsync();
             return result.Success ? result.Template : null;
         }
 
         public void Dispose()
         {
-            _scanner?.Dispose();
+            if (_fingerprintService != null)
+            {
+                _fingerprintService.DisconnectAsync().Wait();
+            }
         }
     }
 

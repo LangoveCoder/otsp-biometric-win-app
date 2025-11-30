@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using BiometricCommon.Services;
 using BiometricCommon.Models;
 using BiometricCommon.Helpers;
-using BiometricCollegeVerify.Views;
+//using BiometricCollegeVerify.Views;
 
 namespace BiometricSuperAdmin.Views
 {
