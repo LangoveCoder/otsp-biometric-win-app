@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -63,33 +63,61 @@ namespace BiometricSuperAdmin.Views
                 if (result.Success)
                 {
                     System.Windows.MessageBox.Show(
-                        $"Scanner connected successfully!\n\n{result.Message}",
+                        $"✓ Scanner Connected!\n\n{result.Message}",
                         "Scanner Ready",
                         System.Windows.MessageBoxButton.OK,
                         System.Windows.MessageBoxImage.Information);
                 }
                 else
                 {
+                    // Show DETAILED error information
+                    string detailedMessage = $"Scanner Initialization Failed\n\n" +
+                                           $"Message: {result.Message}\n\n" +
+                                           $"Details:\n{result.ErrorDetails}\n\n" +
+                                           $"═══════════════════════════════════════\n\n" +
+                                           $"Do you want to use simulated fingerprints for testing?";
+
                     var fallbackResult = System.Windows.MessageBox.Show(
-                        $"Real scanner not detected:\n{result.Message}\n\n" +
-                        "Do you want to use simulated fingerprints for testing?",
-                        "Scanner Not Found",
+                        detailedMessage,
+                        "Scanner Not Found - READ DETAILS",
                         System.Windows.MessageBoxButton.YesNo,
-                        System.Windows.MessageBoxImage.Question);
+                        System.Windows.MessageBoxImage.Warning);
 
                     if (fallbackResult == System.Windows.MessageBoxResult.Yes)
                     {
                         // Use mock scanner as fallback
                         _fingerprintService.RegisterScanner(new MockFingerprintScanner());
-                        await _fingerprintService.AutoDetectScannerAsync();
+                        var mockResult = await _fingerprintService.AutoDetectScannerAsync();
+
+                        if (mockResult.Success)
+                        {
+                            System.Windows.MessageBox.Show(
+                                "✓ Mock scanner activated for testing.\n\n" +
+                                "You can now register students with simulated fingerprints.",
+                                "Mock Scanner Active",
+                                System.Windows.MessageBoxButton.OK,
+                                System.Windows.MessageBoxImage.Information);
+                        }
+                    }
+                    else
+                    {
+                        System.Windows.MessageBox.Show(
+                            "Scanner initialization cancelled.\n\n" +
+                            "Please fix the scanner issue and restart the application.",
+                            "Cancelled",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Information);
                     }
                 }
             }
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show(
-                    $"Scanner initialization error:\n\n{ex.Message}",
-                    "Error",
+                    $"⚠️ CRITICAL ERROR\n\n" +
+                    $"Exception Type: {ex.GetType().Name}\n\n" +
+                    $"Message: {ex.Message}\n\n" +
+                    $"Stack Trace:\n{ex.StackTrace}",
+                    "Scanner Error",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);
             }

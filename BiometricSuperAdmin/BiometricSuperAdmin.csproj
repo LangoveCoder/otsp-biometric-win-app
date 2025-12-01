@@ -7,6 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <Platforms>x64</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +19,12 @@
   <ItemGroup>
     
     <ProjectReference Include="..\BiometricCommon\BiometricCommon.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="SecuGen.FDxSDKPro.Windows">
+      <HintPath>..\..\..\..\Downloads\FDx_SDK_Pro_Windows_v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1_J1.12\FDx SDK Pro for Windows v4.3.1\DotNETFramework\Bin\x64\SecuGen.FDxSDKPro.Windows.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
