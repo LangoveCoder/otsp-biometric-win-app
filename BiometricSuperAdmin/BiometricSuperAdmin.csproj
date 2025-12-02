@@ -11,12 +11,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="BiometricCommon2\**" />
+    <Compile Remove="BiometricCommon\**" />
+    <EmbeddedResource Remove="BiometricCommon2\**" />
+    <EmbeddedResource Remove="BiometricCommon\**" />
+    <None Remove="BiometricCommon2\**" />
+    <None Remove="BiometricCommon\**" />
+    <Page Remove="BiometricCommon2\**" />
+    <Page Remove="BiometricCommon\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
     <PackageReference Include="System.Reactive.Windows.Forms" Version="6.1.0" />
   </ItemGroup>
 
-  <ItemGroup> 
+  <ItemGroup>
     <ProjectReference Include="..\BiometricCommon\BiometricCommon.csproj" />
   </ItemGroup>
 </Project>

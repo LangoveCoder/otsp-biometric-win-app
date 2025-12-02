@@ -5,9 +5,9 @@ VisualStudioVersion = 17.14.36705.20
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricSuperAdmin", "BiometricSuperAdmin\BiometricSuperAdmin.csproj", "{84500744-5EFE-4322-960D-969F787C6227}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricCommon", "BiometricCommon\BiometricCommon.csproj", "{880C0050-8897-4542-86CA-53FFF651EAEB}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricCollegeVerify", "BiometricCollegeVerify\BiometricCollegeVerify.csproj", "{263157BC-5474-CBCA-71A9-753274AFD239}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiometricCommon", "BiometricCommon\BiometricCommon.csproj", "{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,18 +31,6 @@ Global
 		{84500744-5EFE-4322-960D-969F787C6227}.Release|x64.Build.0 = Release|x64
 		{84500744-5EFE-4322-960D-969F787C6227}.Release|x86.ActiveCfg = Release|Any CPU
 		{84500744-5EFE-4322-960D-969F787C6227}.Release|x86.Build.0 = Release|Any CPU
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|x64.Build.0 = Debug|Any CPU
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|x86.ActiveCfg = Debug|x86
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Debug|x86.Build.0 = Debug|x86
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|x64.ActiveCfg = Release|x64
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|x64.Build.0 = Release|x64
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|x86.ActiveCfg = Release|x86
-		{880C0050-8897-4542-86CA-53FFF651EAEB}.Release|x86.Build.0 = Release|x86
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Debug|x64.ActiveCfg = Debug|x64
@@ -55,6 +43,18 @@ Global
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|x64.Build.0 = Release|x64
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|x86.ActiveCfg = Release|Any CPU
 		{263157BC-5474-CBCA-71A9-753274AFD239}.Release|x86.Build.0 = Release|Any CPU
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Debug|x64.ActiveCfg = Debug|x64
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Debug|x64.Build.0 = Debug|x64
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Debug|x86.Build.0 = Debug|Any CPU
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Release|x64.ActiveCfg = Release|x64
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Release|x64.Build.0 = Release|x64
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Release|x86.ActiveCfg = Release|Any CPU
+		{E6A5C425-AC5F-C2D5-1D03-B639A0079C96}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
