@@ -24,16 +24,12 @@
 	<ItemGroup>
 		<Folder Include="Helpers\" />
 	</ItemGroup>
-
-	<!-- NEW: Correct SecuGen DLL Reference -->
 	<ItemGroup>
 		<Reference Include="SecuGen.FDxSDKPro.Windows">
 			<HintPath>SecuGenSDK\SecuGen.FDxSDKPro.Windows.dll</HintPath>
 			<Private>True</Private>
 		</Reference>
 	</ItemGroup>
-
-	<!-- Copy all SecuGen DLLs to output -->
 	<ItemGroup>
 		<None Update="SecuGenSDK\*.dll">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>

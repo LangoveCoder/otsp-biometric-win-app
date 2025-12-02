@@ -159,7 +159,7 @@ namespace BiometricCommon.Scanners
                     byte[] template = new byte[400]; // SecuGen template size
                     int templateSize = 400;
 
-                    err = _fpDevice.CreateTemplate(null, imageBuffer, template, ref templateSize);
+                    err = _fpDevice.CreateTemplate(null, imageBuffer, template);
 
                     if (err != (int)SGFPMError.ERROR_NONE)
                     {
@@ -208,7 +208,7 @@ namespace BiometricCommon.Scanners
 
                     // Use SecuGen matching
                     bool matched = false;
-                    int err = _fpDevice.MatchTemplate(template1, template2, SGFPMSecurityLevel.SLNORMAL, ref matched);
+                    int err = _fpDevice.MatchTemplate(template1, template2, 0, ref matched);
 
                     if (err != (int)SGFPMError.ERROR_NONE)
                     {
