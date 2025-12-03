@@ -93,17 +93,48 @@
                                Foreground="#666"
                                Margin="0,0,0,24"/>
 
+                    <!-- Roll Number Input with Validation Hint -->
                     <TextBlock Text="Roll Number *" 
                                FontWeight="SemiBold"
                                Foreground="#333"
                                Margin="0,0,0,8"/>
-                    <TextBox x:Name="RollNumberTextBox"
-                             FontSize="16"
-                             Padding="12"
-                             Background="#F5F5F5"
-                             BorderBrush="#E0E0E0"
-                             BorderThickness="1"
-                             Margin="0,0,0,24"/>
+
+                    <Grid Margin="0,0,0,8">
+                        <TextBox x:Name="RollNumberTextBox"
+                                 FontSize="20"
+                                 FontWeight="SemiBold"
+                                 Padding="16"
+                                 Background="#F5F5F5"
+                                 BorderBrush="#1976D2"
+                                 BorderThickness="2"
+                                 MaxLength="5"
+                                 TextAlignment="Center"
+                                 VerticalContentAlignment="Center"
+                                 Height="60"/>
+                    </Grid>
+
+                    <!-- Validation Hint -->
+                    <Border Background="#E3F2FD" 
+                            CornerRadius="4" 
+                            Padding="12"
+                            Margin="0,0,0,24">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="ℹ️" 
+                                       FontSize="14" 
+                                       Margin="0,0,8,0"
+                                       VerticalAlignment="Center"/>
+                            <StackPanel>
+                                <TextBlock Text="Roll Number must be exactly 5 digits" 
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#1976D2"/>
+                                <TextBlock Text="Example: 12345" 
+                                           FontSize="11"
+                                           Foreground="#666"
+                                           Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
 
                     <TextBlock Text="Fingerprint Capture" 
                                FontWeight="SemiBold"
@@ -137,7 +168,7 @@
 
                         <Button Grid.Column="0"
                                 x:Name="RegisterButton"
-                                Content="Register Student"
+                                Content="📋 Register Student"
                                 Click="RegisterButton_Click"
                                 Background="#4CAF50"
                                 Foreground="White"
@@ -177,7 +208,7 @@
 
                         <Button Grid.Column="1"
                                 x:Name="ClearButton"
-                                Content="Clear"
+                                Content="🗑️ Clear"
                                 Click="ClearButton_Click"
                                 Background="#757575"
                                 Foreground="White"
