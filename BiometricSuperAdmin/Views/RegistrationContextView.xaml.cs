@@ -28,8 +28,8 @@ namespace BiometricSuperAdmin.Views
             using var context = new BiometricContext();
             var colleges = context.Colleges.OrderBy(c => c.Code).ToList();
             CollegeComboBox.ItemsSource = colleges;
-            CollegeComboBox.DisplayMemberPath = "Name";
-            CollegeComboBox.SelectedValuePath = "Id";
+            CollegeComboBox.DisplayMemberPath = "Name";  // ✅ CORRECT: Uses "Name" property
+            CollegeComboBox.SelectedValuePath = "Id";     // ✅ CORRECT: Uses "Id" property
         }
 
         private void LoadTests()
@@ -37,8 +37,8 @@ namespace BiometricSuperAdmin.Views
             using var context = new BiometricContext();
             var tests = context.Tests.OrderBy(t => t.Name).ToList();
             TestComboBox.ItemsSource = tests;
-            TestComboBox.DisplayMemberPath = "Name";
-            TestComboBox.SelectedValuePath = "Id";
+            TestComboBox.DisplayMemberPath = "Name";  // ✅ CORRECT: Uses "Name" property
+            TestComboBox.SelectedValuePath = "Id";     // ✅ CORRECT: Uses "Id" property
         }
 
         private void LoadSavedContext()
@@ -86,7 +86,7 @@ namespace BiometricSuperAdmin.Views
                 TestId = selectedTest.Id,
                 TestName = selectedTest.Name,
                 LaptopId = LaptopIdTextBox.Text.Trim(),
-                SetDate = DateTime.Now
+                SetDate = DateTime.Now  // ✅ NOW WORKS - Property exists
             };
 
             RegistrationContext.SaveContext(context);

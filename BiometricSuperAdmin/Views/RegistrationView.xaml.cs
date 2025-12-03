@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using BiometricCommon.Database;
@@ -22,6 +24,54 @@ namespace BiometricSuperAdmin.Views
             _context = context;
 
             Loaded += Page_Loaded;
+
+            // ✅ ADD INPUT VALIDATION - Only allow digits
+            RollNumberTextBox.PreviewTextInput += RollNumberTextBox_PreviewTextInput;
+            RollNumberTextBox.TextChanged += RollNumberTextBox_TextChanged;
+
+            // ✅ Prevent paste of non-numeric content
+            DataObject.AddPastingHandler(RollNumberTextBox, RollNumberTextBox_Pasting);
+        }
+
+        // ✅ VALIDATION: Only allow numeric input
+        private void RollNumberTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Only allow digits 0-9
+            e.Handled = !IsNumeric(e.Text);
+        }
+
+        // ✅ VALIDATION: Restrict to 5 digits maximum
+        private void RollNumberTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (RollNumberTextBox.Text.Length > 5)
+            {
+                // Truncate to 5 digits
+                RollNumberTextBox.Text = RollNumberTextBox.Text.Substring(0, 5);
+                RollNumberTextBox.CaretIndex = 5; // Move cursor to end
+            }
+        }
+
+        // ✅ VALIDATION: Prevent pasting non-numeric content
+        private void RollNumberTextBox_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(typeof(string)))
+            {
+                string text = (string)e.DataObject.GetData(typeof(string));
+                if (!IsNumeric(text))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
+        // ✅ Helper method to check if string contains only digits
+        private bool IsNumeric(string text)
+        {
+            return Regex.IsMatch(text, "^[0-9]+$");
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -72,24 +122,64 @@ namespace BiometricSuperAdmin.Views
                     return;
                 }
 
-                // Validate roll number
+                // ✅ VALIDATE ROLL NUMBER - Must be exactly 5 digits
                 string rollNumber = RollNumberTextBox.Text?.Trim();
+
                 if (string.IsNullOrEmpty(rollNumber))
                 {
-                    MessageBox.Show("Please enter a roll number!", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(
+                        "Please enter a roll number!",
+                        "Validation Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
                     RollNumberTextBox.Focus();
                     return;
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Roll Number: {rollNumber}");
+                // ✅ CHECK: Must be exactly 5 digits
+                if (rollNumber.Length != 5)
+                {
+                    MessageBox.Show(
+                        $"Roll number must be exactly 5 digits!\n\n" +
+                        $"You entered: {rollNumber.Length} digit(s)\n" +
+                        $"Required: 5 digits\n\n" +
+                        $"Example: 12345",
+                        "Invalid Roll Number",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    RollNumberTextBox.Focus();
+                    RollNumberTextBox.SelectAll();
+                    return;
+                }
+
+                // ✅ CHECK: Must be numeric only
+                if (!Regex.IsMatch(rollNumber, "^[0-9]{5}$"))
+                {
+                    MessageBox.Show(
+                        "Roll number must contain only digits (0-9)!\n\n" +
+                        "Please enter a valid 5-digit roll number.",
+                        "Invalid Roll Number",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    RollNumberTextBox.Focus();
+                    RollNumberTextBox.SelectAll();
+                    return;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Roll Number: {rollNumber} (Valid 5-digit format)");
 
                 // Check if student already exists
                 var existingStudent = await _context.Students
-                    .FirstOrDefaultAsync(s => s.RollNumber == rollNumber);
+                    .FirstOrDefaultAsync(s => s.RollNumber == rollNumber
+                                           && s.CollegeId == registrationContext.CollegeId
+                                           && s.TestId == registrationContext.TestId);
+
                 if (existingStudent != null)
                 {
                     MessageBox.Show(
                         $"A student with roll number '{rollNumber}' already exists!\n\n" +
+                        $"College: {registrationContext.CollegeName}\n" +
+                        $"Test: {registrationContext.TestName}\n" +
                         $"Registered on: {existingStudent.RegistrationDate:yyyy-MM-dd HH:mm:ss}",
                         "Duplicate Roll Number",
                         MessageBoxButton.OK,
@@ -168,7 +258,8 @@ namespace BiometricSuperAdmin.Views
 
                 // Show capture success with details
                 var confirmResult = MessageBox.Show(
-                    $"Fingerprint CAPTURED successfully!\n\n" +
+                    $"✅ Fingerprint CAPTURED successfully!\n\n" +
+                    $"Roll Number: {rollNumber}\n" +
                     $"Quality Score: {captureResult.QualityScore}%\n" +
                     $"Template Size: {captureResult.Template?.Length ?? 0} bytes\n" +
                     $"Image Size: {captureResult.ImageWidth}x{captureResult.ImageHeight}\n\n" +
@@ -194,6 +285,7 @@ namespace BiometricSuperAdmin.Views
                     TestId = registrationContext.TestId,
                     FingerprintTemplate = captureResult.Template,
                     RegistrationDate = DateTime.Now,
+                    DeviceId = registrationContext.LaptopId,
                     IsVerified = false
                 };
 
@@ -205,8 +297,10 @@ namespace BiometricSuperAdmin.Views
 
                 // Show success message
                 MessageBox.Show(
-                    $"Registration Complete!\n\n" +
+                    $"✅ Registration Complete!\n\n" +
                     $"Roll Number: {rollNumber}\n" +
+                    $"College: {registrationContext.CollegeName}\n" +
+                    $"Test: {registrationContext.TestName}\n" +
                     $"Fingerprint Quality: {captureResult.QualityScore}%\n" +
                     $"Registered at: {student.RegistrationDate:yyyy-MM-dd HH:mm:ss}",
                     "Success",

@@ -93,8 +93,24 @@ namespace BiometricSuperAdmin
             if (MainContentFrame == null)
                 return;
 
-            // Check context for Registration page - REMOVED THE CHECK
-            // We'll let the Registration page itself handle the context check
+            // ✅ CHECK CONTEXT FOR REGISTRATION PAGE ONLY
+            if (NavigationListBox.SelectedIndex == 1) // Registration page
+            {
+                var context = RegistrationContext.GetCurrentContext();
+                if (context == null)
+                {
+                    MessageBox.Show(
+                        "Registration context not set!\n\n" +
+                        "Please set the college, test, and laptop ID first.\n\n" +
+                        "Go to: Tools → Set Registration Context",
+                        "Context Required",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    NavigationListBox.SelectedIndex = 0; // Reset to Dashboard
+                    return;
+                }
+            }
 
             switch (NavigationListBox.SelectedIndex)
             {
