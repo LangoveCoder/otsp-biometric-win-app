@@ -171,7 +171,8 @@ namespace BiometricSuperAdmin.Views
         /// </summary>
         private void RegisterStudentButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService?.Navigate(new RegistrationView());
+            var mainWindow = Application.Current.MainWindow as MainWindow;
+            NavigationService?.Navigate(new RegistrationView(mainWindow?._scannerService, mainWindow?._context));
         }
 
         /// <summary>

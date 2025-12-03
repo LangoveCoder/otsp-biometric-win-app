@@ -1,336 +1,309 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using BiometricCommon.Database;
 using BiometricCommon.Models;
 using BiometricCommon.Services;
-using BiometricCommon.Scanners;
+using BiometricSuperAdmin.Views;
+using Microsoft.EntityFrameworkCore;
 
 namespace BiometricSuperAdmin.Views
 {
     public partial class RegistrationView : Page
     {
-        private readonly DatabaseService _databaseService;
-        private RegContext? _currentContext;
-        private FingerprintService? _fingerprintService;
+        private readonly IFingerprintScanner _scannerService;
+        private readonly BiometricContext? _context;
 
-        public RegistrationView()
+        public RegistrationView(IFingerprintScanner scannerService, BiometricContext? context)
         {
             InitializeComponent();
-            _databaseService = new DatabaseService();
-            Loaded += RegistrationView_Loaded;
+            _scannerService = scannerService;
+            _context = context;
         }
 
-        private void RegistrationView_Loaded(object sender, RoutedEventArgs e)
+        private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            // Load registration context
-            _currentContext = RegContext.GetCurrentContext();
-
-            if (_currentContext == null)
-            {
-                System.Windows.MessageBox.Show(
-                    "Registration context not set. Please set the context first.",
-                    "Context Required",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Warning);
-                return;
-            }
-
-            // Display context info
-            CollegeTextBox.Text = _currentContext.CollegeName;
-            TestTextBox.Text = _currentContext.TestName;
-            DeviceTextBox.Text = _currentContext.LaptopId;
-
-            // Initialize fingerprint scanner
-            InitializeScannerAsync();
+            LoadContext();
         }
-
-        private async void InitializeScannerAsync()
+        private void LoadContext()
         {
-            try
+            var context = RegistrationContext.GetCurrentContext();
+
+            MessageBox.Show($"Context: {context?.CollegeName ?? "NULL"}"); // DEBUG
+
+            if (context != null)
             {
-                _fingerprintService = new FingerprintService();
-
-                // Register SecuGen scanner
-                _fingerprintService.RegisterScanner(new SecuGenScanner());
-
-                // Try to initialize
-                var result = await _fingerprintService.AutoDetectScannerAsync();
-
-                if (result.Success)
-                {
-                    System.Windows.MessageBox.Show(
-                        $"✓ Scanner Connected!\n\n{result.Message}",
-                        "Scanner Ready",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Information);
-                }
-                else
-                {
-                    // Show DETAILED error information
-                    string detailedMessage = $"Scanner Initialization Failed\n\n" +
-                                           $"Message: {result.Message}\n\n" +
-                                           $"Details:\n{result.ErrorDetails}\n\n" +
-                                           $"═══════════════════════════════════════\n\n" +
-                                           $"Do you want to use simulated fingerprints for testing?";
-
-                    var fallbackResult = System.Windows.MessageBox.Show(
-                        detailedMessage,
-                        "Scanner Not Found - READ DETAILS",
-                        System.Windows.MessageBoxButton.YesNo,
-                        System.Windows.MessageBoxImage.Warning);
-
-                    if (fallbackResult == System.Windows.MessageBoxResult.Yes)
-                    {
-                        // Use mock scanner as fallback
-                        _fingerprintService.RegisterScanner(new MockFingerprintScanner());
-                        var mockResult = await _fingerprintService.AutoDetectScannerAsync();
-
-                        if (mockResult.Success)
-                        {
-                            System.Windows.MessageBox.Show(
-                                "✓ Mock scanner activated for testing.\n\n" +
-                                "You can now register students with simulated fingerprints.",
-                                "Mock Scanner Active",
-                                System.Windows.MessageBoxButton.OK,
-                                System.Windows.MessageBoxImage.Information);
-                        }
-                    }
-                    else
-                    {
-                        System.Windows.MessageBox.Show(
-                            "Scanner initialization cancelled.\n\n" +
-                            "Please fix the scanner issue and restart the application.",
-                            "Cancelled",
-                            System.Windows.MessageBoxButton.OK,
-                            System.Windows.MessageBoxImage.Information);
-                    }
-                }
+                CollegeTextBox.Text = context.CollegeName;
+                TestTextBox.Text = context.TestName;
+                DeviceTextBox.Text = context.LaptopId;
             }
-            catch (Exception ex)
+            else
             {
-                System.Windows.MessageBox.Show(
-                    $"⚠️ CRITICAL ERROR\n\n" +
-                    $"Exception Type: {ex.GetType().Name}\n\n" +
-                    $"Message: {ex.Message}\n\n" +
-                    $"Stack Trace:\n{ex.StackTrace}",
-                    "Scanner Error",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
+                CollegeTextBox.Text = "Not Set";
+                TestTextBox.Text = "Not Set";
+                DeviceTextBox.Text = Environment.MachineName;
             }
         }
-
         private async void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Validate context
-                if (_currentContext == null)
+                // Check context first
+                var registrationContext = RegistrationContext.GetCurrentContext();
+                if (registrationContext == null)
                 {
-                    System.Windows.MessageBox.Show(
-                        "Registration context not set. Please set the context first.",
+                    MessageBox.Show(
+                        "Registration context not set!\n\nPlease go to Dashboard and set context first.",
                         "Context Required",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                System.Diagnostics.Debug.WriteLine("=== Register Button Clicked ===");
+
+                // Validate context
+                if (_context == null)
+                {
+                    MessageBox.Show("Database context is not available!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
                 // Validate roll number
-                string rollNumber = RollNumberTextBox.Text.Trim();
-                if (string.IsNullOrWhiteSpace(rollNumber))
+                string rollNumber = RollNumberTextBox.Text?.Trim();
+                if (string.IsNullOrEmpty(rollNumber))
                 {
-                    System.Windows.MessageBox.Show(
-                        "Please enter a roll number.",
-                        "Validation Error",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
+                    MessageBox.Show("Please enter a roll number!", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     RollNumberTextBox.Focus();
                     return;
                 }
 
-                // Check if student already registered
-                var existingStudent = _databaseService.GetStudentByRollNumber(rollNumber);
+                System.Diagnostics.Debug.WriteLine($"Roll Number: {rollNumber}");
 
+                // Check if student already exists
+                var existingStudent = await _context.Students
+    .FirstOrDefaultAsync(s => s.RollNumber == rollNumber);
                 if (existingStudent != null)
                 {
-                    var result = System.Windows.MessageBox.Show(
-                        $"Student with roll number '{rollNumber}' is already registered.\n\n" +
-                        "Do you want to re-register (update fingerprint)?",
-                        "Student Exists",
-                        System.Windows.MessageBoxButton.YesNo,
-                        System.Windows.MessageBoxImage.Question);
-
-                    if (result == System.Windows.MessageBoxResult.No)
-                        return;
+                    MessageBox.Show(
+                        $"A student with roll number '{rollNumber}' already exists!\n\n" +
+                        $"Registered on: {existingStudent.RegistrationDate:yyyy-MM-dd HH:mm:ss}",
+                        "Duplicate Roll Number",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
                 }
 
-                // Show loading
+                // Check scanner
+                if (!_scannerService.IsConnected)
+                {
+                    MessageBox.Show(
+                        "Fingerprint scanner is not connected!\n\n" +
+                        "Please ensure:\n" +
+                        "1. Scanner is plugged in\n" +
+                        "2. Drivers are installed\n" +
+                        "3. Application was restarted after driver installation",
+                        "Scanner Not Ready",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                System.Diagnostics.Debug.WriteLine("Scanner is connected, prompting user...");
+
+                // Show loading overlay
                 LoadingOverlay.Visibility = Visibility.Visible;
                 RegisterButton.IsEnabled = false;
 
+                // Prompt user to place finger
+                MessageBox.Show(
+                    "Place your RIGHT INDEX finger on the scanner NOW!\n\n" +
+                    "Instructions:\n" +
+                    "• Clean the scanner surface\n" +
+                    "• Place finger flat on the glass\n" +
+                    "• Apply firm, even pressure\n" +
+                    "• Keep finger still until capture completes\n\n" +
+                    "Click OK when ready, then place your finger.",
+                    "Ready to Capture",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                System.Diagnostics.Debug.WriteLine("User acknowledged, starting capture...");
+
                 // Capture fingerprint
-                byte[] fingerprintTemplate;
+                var captureResult = await _scannerService.CaptureAsync();
 
-                if (_fingerprintService != null && _fingerprintService.IsReady())
+                // Hide loading overlay
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+                RegisterButton.IsEnabled = true;
+
+                System.Diagnostics.Debug.WriteLine($"Capture result: Success={captureResult.Success}, Quality={captureResult.QualityScore}");
+
+                if (!captureResult.Success)
                 {
-                    // Prompt user to place finger
-                    System.Windows.MessageBox.Show(
-                        "Please place your finger on the scanner.",
-                        "Fingerprint Capture",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Information);
-
-                    // Capture from real scanner
-                    var captureResult = await _fingerprintService.CaptureAsync();
-
-                    if (!captureResult.Success)
-                    {
-                        System.Windows.MessageBox.Show(
-                            $"Fingerprint capture failed:\n\n{captureResult.Message}\n\n" +
-                            $"Quality Score: {captureResult.QualityScore}\n" +
-                            $"Reason: {captureResult.FailureReason}",
-                            "Capture Failed",
-                            System.Windows.MessageBoxButton.OK,
-                            System.Windows.MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    fingerprintTemplate = captureResult.Template;
-
-                    System.Windows.MessageBox.Show(
-                        $"Fingerprint captured successfully!\n\n" +
-                        $"Quality Score: {captureResult.QualityScore}%",
-                        "Success",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Information);
-                }
-                else
-                {
-                    // Fallback to simulated fingerprint
-                    fingerprintTemplate = SimulateFingerprintCapture();
+                    MessageBox.Show(
+                        $"Failed to capture fingerprint!\n\n{captureResult.Message}\n\nPlease try again.",
+                        "Capture Failed",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
                 }
 
-                // Register student
-                await _databaseService.RegisterStudentAsync(
-                    rollNumber,
-                    _currentContext.CollegeId,
-                    _currentContext.TestId,
-                    fingerprintTemplate);
+                // Display the fingerprint image
+                if (captureResult.ImageData != null && captureResult.ImageWidth > 0 && captureResult.ImageHeight > 0)
+                {
+                    DisplayFingerprintImage(
+                        captureResult.ImageData,
+                        captureResult.ImageWidth,
+                        captureResult.ImageHeight,
+                        captureResult.QualityScore,
+                        captureResult.Template?.Length ?? 0
+                    );
+                }
 
-                System.Windows.MessageBox.Show(
-                    $"Student '{rollNumber}' registered successfully!",
+                System.Diagnostics.Debug.WriteLine($"Template length: {captureResult.Template?.Length ?? 0} bytes");
+
+                // Show capture success with details
+                var confirmResult = MessageBox.Show(
+                    $"Fingerprint CAPTURED successfully!\n\n" +
+                    $"Quality Score: {captureResult.QualityScore}%\n" +
+                    $"Template Size: {captureResult.Template?.Length ?? 0} bytes\n" +
+                    $"Image Size: {captureResult.ImageWidth}x{captureResult.ImageHeight}\n\n" +
+                    $"Review the fingerprint image on the right panel.\n\n" +
+                    $"Click YES to save and register this student.\n" +
+                    $"Click NO to cancel and try again.",
+                    "Confirm Registration",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (confirmResult != MessageBoxResult.Yes)
+                {
+                    System.Diagnostics.Debug.WriteLine("User cancelled registration");
+                    ClearFingerprintDisplay();
+                    return;
+                }
+
+                // Create student record
+                var student = new Student
+                {
+                    RollNumber = rollNumber,
+                    CollegeId = 1, // TODO: Get from context
+                    TestId = 1, // TODO: Get from context
+                    FingerprintTemplate = captureResult.Template,
+                    RegistrationDate = DateTime.Now,
+                    IsVerified = false
+                };
+
+                // Save to database
+                _context.Students.Add(student);
+                await _context.SaveChangesAsync();
+
+                System.Diagnostics.Debug.WriteLine($"✓✓✓ Student saved to database: {rollNumber}");
+
+                // Show success message
+                MessageBox.Show(
+                    $"Registration Complete!\n\n" +
+                    $"Roll Number: {rollNumber}\n" +
+                    $"Fingerprint Quality: {captureResult.QualityScore}%\n" +
+                    $"Registered at: {student.RegistrationDate:yyyy-MM-dd HH:mm:ss}",
                     "Success",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Information);
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
 
                 // Clear form for next student
-                RollNumberTextBox.Clear();
-                RollNumberTextBox.Focus();
+                ClearForm();
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show(
-                    $"Error during registration: {ex.Message}",
-                    "Registration Error",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
-            }
-            finally
-            {
                 LoadingOverlay.Visibility = Visibility.Collapsed;
                 RegisterButton.IsEnabled = true;
+
+                System.Diagnostics.Debug.WriteLine($"EXCEPTION in RegisterButton_Click: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
+                MessageBox.Show(
+                    $"An error occurred during registration:\n\n{ex.Message}\n\nPlease try again.",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
-        /// <summary>
-        /// Simulate fingerprint capture for testing (fallback)
-        /// </summary>
-        private byte[] SimulateFingerprintCapture()
+        private void DisplayFingerprintImage(byte[] imageData, int width, int height, int quality, int templateSize)
         {
-            var data = $"FP-{DateTime.Now.Ticks}-{RollNumberTextBox.Text}";
-            return System.Text.Encoding.UTF8.GetBytes(data);
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"Displaying fingerprint image: {width}x{height}");
+
+                // Create bitmap from raw image data
+                var bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Gray8, null);
+
+                // Write pixel data
+                Int32Rect rect = new Int32Rect(0, 0, width, height);
+                bitmap.WritePixels(rect, imageData, width, 0);
+
+                // Display image
+                FingerprintImage.Source = bitmap;
+                FingerprintImage.Visibility = Visibility.Visible;
+                PlaceholderText.Visibility = Visibility.Collapsed;
+
+                // Show capture info
+                CaptureInfoPanel.Visibility = Visibility.Visible;
+                QualityText.Text = $"{quality}%";
+
+                // Color code quality
+                if (quality >= 80)
+                {
+                    QualityText.Foreground = new SolidColorBrush(Color.FromRgb(46, 125, 50)); // Green
+                }
+                else if (quality >= 60)
+                {
+                    QualityText.Foreground = new SolidColorBrush(Color.FromRgb(251, 140, 0)); // Orange
+                }
+                else
+                {
+                    QualityText.Foreground = new SolidColorBrush(Color.FromRgb(211, 47, 47)); // Red
+                }
+
+                TemplateSizeText.Text = $"{templateSize} bytes";
+                ImageSizeText.Text = $"{width} x {height} pixels";
+
+                System.Diagnostics.Debug.WriteLine($"✓ Image displayed successfully - Quality: {quality}%");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error displaying fingerprint image: {ex.Message}");
+                MessageBox.Show(
+                    $"Could not display fingerprint image: {ex.Message}",
+                    "Display Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+
+        private void ClearFingerprintDisplay()
+        {
+            FingerprintImage.Source = null;
+            FingerprintImage.Visibility = Visibility.Collapsed;
+            PlaceholderText.Visibility = Visibility.Visible;
+            CaptureInfoPanel.Visibility = Visibility.Collapsed;
+            QualityText.Text = "-";
+            TemplateSizeText.Text = "-";
+            ImageSizeText.Text = "-";
+        }
+
+        private void ClearForm()
+        {
+            RollNumberTextBox.Clear();
+            ClearFingerprintDisplay();
+            RollNumberTextBox.Focus();
         }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
-            RollNumberTextBox.Clear();
-            RollNumberTextBox.Focus();
-        }
-    }
-
-    /// <summary>
-    /// Registration context helper class
-    /// </summary>
-    public class RegContext
-    {
-        public int CollegeId { get; set; }
-        public string CollegeName { get; set; } = string.Empty;
-        public int TestId { get; set; }
-        public string TestName { get; set; } = string.Empty;
-        public string LaptopId { get; set; } = string.Empty;
-        public DateTime SetDate { get; set; }
-
-        private static readonly string ContextFilePath =
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "BiometricVerification",
-                "registration_context.json");
-
-        public static RegContext? GetCurrentContext()
-        {
-            try
-            {
-                if (File.Exists(ContextFilePath))
-                {
-                    var json = File.ReadAllText(ContextFilePath);
-                    return JsonSerializer.Deserialize<RegContext>(json);
-                }
-            }
-            catch
-            {
-                // Ignore errors
-            }
-            return null;
-        }
-
-        public void Save()
-        {
-            try
-            {
-                var directory = Path.GetDirectoryName(ContextFilePath);
-                if (directory != null && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                var json = JsonSerializer.Serialize(this, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
-                File.WriteAllText(ContextFilePath, json);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Failed to save context: {ex.Message}");
-            }
-        }
-
-        public static void Clear()
-        {
-            try
-            {
-                if (File.Exists(ContextFilePath))
-                {
-                    File.Delete(ContextFilePath);
-                }
-            }
-            catch
-            {
-                // Ignore errors
-            }
+            ClearForm();
         }
     }
 }

@@ -7,6 +7,10 @@ namespace BiometricCommon.Scanners
 {
     public class SecuGenScanner : IFingerprintScanner
     {
+        private static SGFingerPrintManager? _staticDevice = null;
+        private static bool _isGloballyInitialized = false;
+        private static readonly object _lockObject = new object();
+
         private SGFingerPrintManager? _fpDevice;
         private bool _isInitialized = false;
         private int _imageWidth = 0;
@@ -20,94 +24,144 @@ namespace BiometricCommon.Scanners
         {
             return await Task.Run(() =>
             {
-                try
+                lock (_lockObject)
                 {
-                    System.Diagnostics.Debug.WriteLine("=== SecuGen Scanner Init (SGFingerPrintManager) ===");
-
-                    // Create device instance
-                    _fpDevice = new SGFingerPrintManager();
-
-                    // Initialize with FDU08 (U20-A device)
-                    int err = _fpDevice.Init(SGFPMDeviceName.DEV_FDU08);
-
-                    System.Diagnostics.Debug.WriteLine($"Init result: {err}");
-
-                    if (err != (int)SGFPMError.ERROR_NONE)
+                    try
                     {
-                        string errorMsg = GetErrorMessage(err);
-                        System.Diagnostics.Debug.WriteLine($"ERROR: Init failed - {errorMsg}");
+                        System.Diagnostics.Debug.WriteLine("=== SecuGen Scanner Init (Singleton) ===");
+
+                        // If already globally initialized, reuse it
+                        if (_isGloballyInitialized && _staticDevice != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Reusing existing scanner connection");
+                            _fpDevice = _staticDevice;
+                            _isInitialized = true;
+
+                            // Get device info if we don't have it
+                            if (_imageWidth == 0)
+                            {
+                                SGFPMDeviceInfoParam existingDeviceInfo = new SGFPMDeviceInfoParam();
+                                int err = _fpDevice.GetDeviceInfo(existingDeviceInfo);
+                                if (err == (int)SGFPMError.ERROR_NONE)
+                                {
+                                    _imageWidth = existingDeviceInfo.ImageWidth;
+                                    _imageHeight = existingDeviceInfo.ImageHeight;
+                                    _imageDPI = existingDeviceInfo.ImageDPI;
+                                }
+                            }
+
+                            return new ScannerInitResult
+                            {
+                                Success = true,
+                                Message = $"✓ Scanner already connected!\n\nImage: {_imageWidth}x{_imageHeight}"
+                            };
+                        }
+
+                        // Clean up any previous instance
+                        if (_staticDevice != null)
+                        {
+                            try
+                            {
+                                System.Diagnostics.Debug.WriteLine("Cleaning up previous instance...");
+                                _staticDevice.CloseDevice();
+                                System.Threading.Thread.Sleep(500);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Cleanup warning: {ex.Message}");
+                            }
+                            _staticDevice = null;
+                            _isGloballyInitialized = false;
+                        }
+
+                        // Create fresh device instance
+                        _fpDevice = new SGFingerPrintManager();
+                        _staticDevice = _fpDevice;
+
+                        // Try DEV_FDU08 (U20-A)
+                        int initErr = _fpDevice.Init(SGFPMDeviceName.DEV_FDU08);
+                        System.Diagnostics.Debug.WriteLine($"Init DEV_FDU08: {initErr} ({GetErrorMessage(initErr)})");
+
+                        // Fallback to AUTO
+                        if (initErr != (int)SGFPMError.ERROR_NONE)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Trying AUTO detection...");
+                            _fpDevice = new SGFingerPrintManager();
+                            _staticDevice = _fpDevice;
+                            initErr = _fpDevice.Init(SGFPMDeviceName.DEV_AUTO);
+                            System.Diagnostics.Debug.WriteLine($"Init DEV_AUTO: {initErr}");
+                        }
+
+                        if (initErr != (int)SGFPMError.ERROR_NONE)
+                        {
+                            _staticDevice = null;
+                            return new ScannerInitResult
+                            {
+                                Success = false,
+                                Message = "Scanner initialization failed",
+                                ErrorDetails = $"Error: {GetErrorMessage(initErr)}\n\n" +
+                                             $"1. Unplug scanner from USB\n" +
+                                             $"2. Wait 5 seconds\n" +
+                                             $"3. Plug scanner back in\n" +
+                                             $"4. Restart application\n" +
+                                             $"5. Check if Windows Biometric Service is disabled"
+                            };
+                        }
+
+                        // Open device
+                        int openErr = _fpDevice.OpenDevice(0);
+                        System.Diagnostics.Debug.WriteLine($"OpenDevice: {openErr}");
+
+                        if (openErr != (int)SGFPMError.ERROR_NONE)
+                        {
+                            _staticDevice = null;
+                            return new ScannerInitResult
+                            {
+                                Success = false,
+                                Message = "Failed to open scanner",
+                                ErrorDetails = $"Error: {GetErrorMessage(openErr)}\n\n" +
+                                             $"Close any other apps using the scanner"
+                            };
+                        }
+
+                        // Get device info
+                        SGFPMDeviceInfoParam deviceInfo = new SGFPMDeviceInfoParam();
+                        int infoErr = _fpDevice.GetDeviceInfo(deviceInfo);
+
+                        if (infoErr == (int)SGFPMError.ERROR_NONE)
+                        {
+                            _imageWidth = deviceInfo.ImageWidth;
+                            _imageHeight = deviceInfo.ImageHeight;
+                            _imageDPI = deviceInfo.ImageDPI;
+                            System.Diagnostics.Debug.WriteLine($"Device: {_imageWidth}x{_imageHeight} @ {_imageDPI}dpi");
+                        }
+
+                        _isInitialized = true;
+                        _isGloballyInitialized = true;
+
+                        System.Diagnostics.Debug.WriteLine("✓✓✓ Scanner initialized!");
+
+                        return new ScannerInitResult
+                        {
+                            Success = true,
+                            Message = $"✓ SecuGen U20-A Ready!\n\n" +
+                                    $"Image: {_imageWidth}x{_imageHeight}\n" +
+                                    $"DPI: {_imageDPI}"
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"EXCEPTION: {ex.Message}");
+                        _staticDevice = null;
+                        _isGloballyInitialized = false;
 
                         return new ScannerInitResult
                         {
                             Success = false,
-                            Message = $"Scanner initialization failed",
-                            ErrorDetails = $"Error Code: {err}\n" +
-                                         $"Error: {errorMsg}\n\n" +
-                                         $"Checklist:\n" +
-                                         $"✓ Scanner plugged into USB?\n" +
-                                         $"✓ Driver installed?\n" +
-                                         $"✓ Close SecuGen Diagnostic Tool\n" +
-                                         $"✓ Try unplugging and replugging scanner"
+                            Message = "Critical error",
+                            ErrorDetails = $"{ex.GetType().Name}: {ex.Message}"
                         };
                     }
-
-                    // Open device (port 0 = first USB device)
-                    err = _fpDevice.OpenDevice(0);
-
-                    System.Diagnostics.Debug.WriteLine($"OpenDevice result: {err}");
-
-                    if (err != (int)SGFPMError.ERROR_NONE)
-                    {
-                        string errorMsg = GetErrorMessage(err);
-                        System.Diagnostics.Debug.WriteLine($"ERROR: OpenDevice failed - {errorMsg}");
-
-                        return new ScannerInitResult
-                        {
-                            Success = false,
-                            Message = $"Failed to open scanner",
-                            ErrorDetails = $"Error Code: {err}\n" +
-                                         $"Error: {errorMsg}\n\n" +
-                                         $"Scanner found but couldn't be opened.\n" +
-                                         $"Is another app using it?"
-                        };
-                    }
-
-                    // Get device info (image dimensions)
-                    SGFPMDeviceInfoParam deviceInfo = new SGFPMDeviceInfoParam();
-                    err = _fpDevice.GetDeviceInfo(deviceInfo);
-
-                    if (err == (int)SGFPMError.ERROR_NONE)
-                    {
-                        _imageWidth = deviceInfo.ImageWidth;
-                        _imageHeight = deviceInfo.ImageHeight;
-                        _imageDPI = deviceInfo.ImageDPI;
-
-                        System.Diagnostics.Debug.WriteLine($"Device Info: {_imageWidth}x{_imageHeight} @ {_imageDPI} DPI");
-                    }
-
-                    _isInitialized = true;
-                    System.Diagnostics.Debug.WriteLine("✓✓✓ Scanner initialized successfully!");
-
-                    return new ScannerInitResult
-                    {
-                        Success = true,
-                        Message = $"✓ SecuGen scanner ready!\n\n" +
-                                $"Model: Hamster Pro 20 (U20-A)\n" +
-                                $"Image: {_imageWidth}x{_imageHeight}\n" +
-                                $"DPI: {_imageDPI}"
-                    };
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"EXCEPTION: {ex.Message}");
-
-                    return new ScannerInitResult
-                    {
-                        Success = false,
-                        Message = "Unexpected error",
-                        ErrorDetails = $"{ex.GetType().Name}: {ex.Message}\n\n" +
-                                     $"Make sure SecuGen.FDxSDKPro.Windows.dll and all native DLLs are present."
-                    };
                 }
             });
         }
@@ -130,10 +184,8 @@ namespace BiometricCommon.Scanners
 
                     System.Diagnostics.Debug.WriteLine("Capturing fingerprint...");
 
-                    // Create buffer for raw image
                     byte[] imageBuffer = new byte[_imageWidth * _imageHeight];
 
-                    // Capture fingerprint image
                     int err = _fpDevice.GetImage(imageBuffer);
 
                     if (err != (int)SGFPMError.ERROR_NONE)
@@ -149,31 +201,27 @@ namespace BiometricCommon.Scanners
                         };
                     }
 
-                    // Get image quality
                     int quality = 0;
                     err = _fpDevice.GetImageQuality(_imageWidth, _imageHeight, imageBuffer, ref quality);
 
                     System.Diagnostics.Debug.WriteLine($"✓ Captured! Quality: {quality}");
 
-                    // Convert image to template for matching
-                    byte[] template = new byte[400]; // SecuGen template size
-                    int templateSize = 400;
-
+                    byte[] template = new byte[400];
                     err = _fpDevice.CreateTemplate(null, imageBuffer, template);
 
-                    if (err != (int)SGFPMError.ERROR_NONE)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Template creation failed: {err}");
-                        // Still return the image even if template fails
-                        Array.Resize(ref template, templateSize);
-                    }
+                    // Clone the image buffer to ensure it persists
+                    byte[] imageDataCopy = new byte[imageBuffer.Length];
+                    Array.Copy(imageBuffer, imageDataCopy, imageBuffer.Length);
 
                     return new FingerprintCaptureResult
                     {
                         Success = true,
                         Template = template,
+                        ImageData = imageDataCopy,      // ← NEW: Include raw image
+                        ImageWidth = _imageWidth,        // ← NEW
+                        ImageHeight = _imageHeight,      // ← NEW
                         QualityScore = quality,
-                        Message = $"Fingerprint captured (Quality: {quality}%)"
+                        Message = $"Captured (Quality: {quality}%)"
                     };
                 }
                 catch (Exception ex)
@@ -206,13 +254,11 @@ namespace BiometricCommon.Scanners
                         };
                     }
 
-                    // Use SecuGen matching
                     bool matched = false;
                     int err = _fpDevice.MatchTemplate(template1, template2, 0, ref matched);
 
                     if (err != (int)SGFPMError.ERROR_NONE)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Match failed with error: {err}");
                         return new FingerprintMatchResult
                         {
                             IsMatch = false,
@@ -221,22 +267,18 @@ namespace BiometricCommon.Scanners
                         };
                     }
 
-                    int confidence = matched ? 95 : 0; // SecuGen doesn't give scores, just yes/no
-
-                    System.Diagnostics.Debug.WriteLine($"Match result: {matched} (Confidence: {confidence})");
+                    int confidence = matched ? 95 : 0;
 
                     return new FingerprintMatchResult
                     {
                         IsMatch = matched,
                         ConfidenceScore = confidence,
-                        Message = matched ? "Fingerprint matched!" : "No match",
+                        Message = matched ? "Matched!" : "No match",
                         Quality = matched ? MatchQuality.Excellent : MatchQuality.Poor
                     };
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Match exception: {ex.Message}");
-
                     return new FingerprintMatchResult
                     {
                         IsMatch = false,
@@ -249,32 +291,14 @@ namespace BiometricCommon.Scanners
 
         public int GetQualityScore(byte[] template)
         {
-            // SecuGen doesn't provide quality from template alone
-            // Quality is checked during capture
-            return 75; // Default estimate
+            return 75;
         }
 
         public async Task DisconnectAsync()
         {
             await Task.Run(() =>
             {
-                try
-                {
-                    if (_fpDevice != null)
-                    {
-                        _fpDevice.CloseDevice();
-                        System.Diagnostics.Debug.WriteLine("Scanner disconnected");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Disconnect error: {ex.Message}");
-                }
-                finally
-                {
-                    _fpDevice = null;
-                    _isInitialized = false;
-                }
+                System.Diagnostics.Debug.WriteLine("Disconnect called (keeping device open for reuse)");
             });
         }
 

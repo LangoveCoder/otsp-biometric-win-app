@@ -158,7 +158,8 @@ namespace BiometricSuperAdmin.Views
                 System.Windows.MessageBoxImage.Information);
 
             // Navigate to registration page
-            NavigationService?.Navigate(new RegistrationView());
+            var mainWindow = Application.Current.MainWindow as MainWindow;
+            NavigationService?.Navigate(new RegistrationView(mainWindow?._scannerService, mainWindow?._context));
         }
 
         private void LoadCurrentContext()

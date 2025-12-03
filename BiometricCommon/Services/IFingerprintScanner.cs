@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace BiometricCommon.Services
 {
@@ -7,6 +6,7 @@ namespace BiometricCommon.Services
     {
         string ScannerName { get; }
         bool IsConnected { get; }
+
         Task<ScannerInitResult> InitializeAsync();
         Task<FingerprintCaptureResult> CaptureAsync();
         Task<FingerprintMatchResult> MatchAsync(byte[] template1, byte[] template2);
@@ -19,17 +19,19 @@ namespace BiometricCommon.Services
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
-        public string ErrorDetails { get; set; } = string.Empty;
+        public string? ErrorDetails { get; set; }
     }
 
     public class FingerprintCaptureResult
     {
         public bool Success { get; set; }
-        public byte[] Template { get; set; } = Array.Empty<byte>();
+        public byte[]? Template { get; set; }
+        public byte[]? ImageData { get; set; }  // ← NEW: Raw fingerprint image
+        public int ImageWidth { get; set; }      // ← NEW: Image width in pixels
+        public int ImageHeight { get; set; }     // ← NEW: Image height in pixels
         public int QualityScore { get; set; }
         public string Message { get; set; } = string.Empty;
-        public string ErrorDetails { get; set; } = string.Empty;
-        public CaptureFailureReason FailureReason { get; set; }
+        public CaptureFailureReason? FailureReason { get; set; }
     }
 
     public class FingerprintMatchResult
@@ -52,21 +54,19 @@ namespace BiometricCommon.Services
 
     public enum CaptureFailureReason
     {
-        None,
         DeviceNotConnected,
-        PoorQuality,
         Timeout,
-        UserCancelled,
+        PoorQuality,
         DeviceError,
-        Unknown
+        UserCancelled
     }
 
     public enum MatchQuality
     {
-        Poor,
-        Fair,
+        Excellent,
         Good,
-        Excellent
+        Fair,
+        Poor
     }
 
     public enum ScannerType
@@ -74,7 +74,6 @@ namespace BiometricCommon.Services
         Optical,
         Capacitive,
         Ultrasonic,
-        Thermal,
-        Unknown
+        Thermal
     }
 }

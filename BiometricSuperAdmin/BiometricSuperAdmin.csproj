@@ -1,33 +1,54 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<Platforms>x64</Platforms>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
+	<ItemGroup>
+		<Compile Remove="BiometricCommon2\**" />
+		<Compile Remove="BiometricCommon\**" />
+		<EmbeddedResource Remove="BiometricCommon2\**" />
+		<EmbeddedResource Remove="BiometricCommon\**" />
+		<None Remove="BiometricCommon2\**" />
+		<None Remove="BiometricCommon\**" />
+		<Page Remove="BiometricCommon2\**" />
+		<Page Remove="BiometricCommon\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="BiometricCommon2\**" />
-    <Compile Remove="BiometricCommon\**" />
-    <EmbeddedResource Remove="BiometricCommon2\**" />
-    <EmbeddedResource Remove="BiometricCommon\**" />
-    <None Remove="BiometricCommon2\**" />
-    <None Remove="BiometricCommon\**" />
-    <Page Remove="BiometricCommon2\**" />
-    <Page Remove="BiometricCommon\**" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="MaterialDesignColors" Version="5.3.0" />
+		<PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+		<PackageReference Include="System.Reactive.Windows.Forms" Version="6.1.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
-    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
-    <PackageReference Include="System.Reactive.Windows.Forms" Version="6.1.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\BiometricCommon\BiometricCommon.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\BiometricCommon\BiometricCommon.csproj" />
-  </ItemGroup>
+	<!-- Copy SecuGen DLLs from BiometricCommon to output directory -->
+	<ItemGroup>
+		<None Include="..\BiometricCommon\SecuGenSDK\SecuGen.FDxSDKPro.Windows.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Include="..\BiometricCommon\SecuGenSDK\sgfplib.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Include="..\BiometricCommon\SecuGenSDK\sgfpamx.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Include="..\BiometricCommon\SecuGenSDK\sgwsqlib.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Include="..\BiometricCommon\SecuGenSDK\sgfdusdax64.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Include="..\BiometricCommon\SecuGenSDK\sgbledev.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>

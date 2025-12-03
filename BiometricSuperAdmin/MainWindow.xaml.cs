@@ -1,10 +1,12 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.Win32;
-using BiometricSuperAdmin.Views;
+using BiometricCommon.Database;
+using BiometricCommon.Models;
+using BiometricCommon.Scanners;
 using BiometricCommon.Services;
-//using BiometricCollegeVerify.Views;
+using BiometricSuperAdmin.Views;
+using Microsoft.Win32;
 
 namespace BiometricSuperAdmin
 {
@@ -12,57 +14,63 @@ namespace BiometricSuperAdmin
     {
         private readonly DatabaseService _databaseService;
         private readonly MasterConfigService _configService;
+        public readonly IFingerprintScanner _scannerService;
+        public readonly BiometricContext _context;
 
         public MainWindow()
         {
             InitializeComponent();
             _databaseService = new DatabaseService();
             _configService = new MasterConfigService();
+            _context = new BiometricContext();
+            _scannerService = new SecuGenScanner();
 
             Loaded += MainWindow_Loaded;
+            InitializeScannerAsync();
+        }
+
+        private async void InitializeScannerAsync()
+        {
+            var result = await _scannerService.InitializeAsync();
+            if (!result.Success)
+            {
+                MessageBox.Show($"Scanner init failed:\n{result.Message}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            // Step 1: Check if database is empty and auto-import exists
             if (_configService.IsDatabaseEmpty())
             {
                 if (MasterConfigService.AutoImportFileExists())
                 {
-                    var result = System.Windows.MessageBox.Show(
-                        "✨ Master configuration file detected!\n\n" +
-                        "Do you want to import colleges and tests automatically?\n\n" +
-                        "📋 This will setup your laptop with all colleges and tests.",
+                    var result = MessageBox.Show(
+                        "✨ Master configuration file detected!\n\nDo you want to import colleges and tests automatically?",
                         "Auto-Import Configuration",
-                        System.Windows.MessageBoxButton.YesNo,
-                        System.Windows.MessageBoxImage.Question);
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
 
-                    if (result == System.Windows.MessageBoxResult.Yes)
+                    if (result == MessageBoxResult.Yes)
                     {
                         try
                         {
                             var importResult = await _configService.ImportMasterConfigAsync(
                                 MasterConfigService.GetAutoImportFilePath());
 
-                            System.Windows.MessageBox.Show(
+                            MessageBox.Show(
                                 importResult.GetSummary(),
                                 importResult.Success ? "✅ Import Successful" : "❌ Import Failed",
-                                System.Windows.MessageBoxButton.OK,
-                                importResult.Success ? System.Windows.MessageBoxImage.Information : System.Windows.MessageBoxImage.Error);
+                                MessageBoxButton.OK,
+                                importResult.Success ? MessageBoxImage.Information : MessageBoxImage.Error);
                         }
                         catch (Exception ex)
                         {
-                            System.Windows.MessageBox.Show(
-                                $"Failed to auto-import configuration:\n\n{ex.Message}",
-                                "Import Error",
-                                System.Windows.MessageBoxButton.OK,
-                                System.Windows.MessageBoxImage.Error);
+                            MessageBox.Show($"Failed to auto-import:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                     }
                 }
             }
 
-            // Step 2: Check if registration context is set
             var context = RegistrationContext.GetCurrentContext();
 
             if (context == null)
@@ -75,7 +83,6 @@ namespace BiometricSuperAdmin
                 Title = $"Biometric Verification System - {context.LaptopId} - {context.CollegeName}";
             }
         }
-
         private void NavigationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (NavigationListBox == null || NavigationListBox.SelectedIndex < 0)
@@ -84,36 +91,41 @@ namespace BiometricSuperAdmin
             if (MainContentFrame == null)
                 return;
 
-            if (NavigationListBox.SelectedIndex == 1) // Student Registration
+            // Check context for Registration page
+            if (NavigationListBox.SelectedIndex == 1)
             {
                 var context = RegistrationContext.GetCurrentContext();
                 if (context == null)
                 {
-                    System.Windows.MessageBox.Show(
-                        "Please set registration context first!\n\n" +
-                        "Go to Dashboard and set which college and test you're registering for.",
-                        "Context Not Set",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
-
+                    MessageBox.Show("Please set registration context first!", "Context Not Set",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                     NavigationListBox.SelectedIndex = 0;
                     return;
+                }
+
+                // Also check if college exists
+                using (var db = new BiometricContext())
+                {
+                    if (!db.Colleges.Any())
+                    {
+                        MessageBox.Show("No colleges found! Please create a college first.",
+                            "No Colleges", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NavigationListBox.SelectedIndex = 2; // Go to College Management
+                        return;
+                    }
                 }
             }
 
             switch (NavigationListBox.SelectedIndex)
             {
                 case 0: MainContentFrame.Navigate(new DashboardView()); break;
-                case 1: MainContentFrame.Navigate(new RegistrationView()); break;
+                case 1: MainContentFrame.Navigate(new RegistrationView(_scannerService, _context)); break;
                 case 2: MainContentFrame.Navigate(new CollegeManagementView()); break;
                 case 3: MainContentFrame.Navigate(new TestManagementView()); break;
                 case 4: MainContentFrame.Navigate(new PackageGeneratorView()); break;
                 case 5: MainContentFrame.Navigate(new ReportsView()); break;
             }
         }
-
-        // ==================== MENU HANDLERS ====================
-
         private async void ExportConfigMenuItem_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -128,23 +140,12 @@ namespace BiometricSuperAdmin
                 if (saveDialog.ShowDialog() == true)
                 {
                     var result = await _configService.ExportMasterConfigAsync(saveDialog.FileName);
-
-                    System.Windows.MessageBox.Show(
-                        $"✅ {result}\n\n" +
-                        $"📁 File saved to:\n{saveDialog.FileName}\n\n" +
-                        $"💡 Copy this file to USB and distribute to all registration laptops.",
-                        "Export Successful",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Information);
+                    MessageBox.Show($"✅ {result}\n\n📁 {saveDialog.FileName}", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show(
-                    $"Failed to export configuration:\n\n{ex.Message}",
-                    "Export Error",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
+                MessageBox.Show($"Export failed:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -161,16 +162,11 @@ namespace BiometricSuperAdmin
                 if (openDialog.ShowDialog() == true)
                 {
                     var importResult = await _configService.ImportMasterConfigAsync(openDialog.FileName);
-
-                    System.Windows.MessageBox.Show(
-                        importResult.GetSummary(),
-                        importResult.Success ? "✅ Import Successful" : "❌ Import Failed",
-                        System.Windows.MessageBoxButton.OK,
-                        importResult.Success ? System.Windows.MessageBoxImage.Information : System.Windows.MessageBoxImage.Error);
+                    MessageBox.Show(importResult.GetSummary(), importResult.Success ? "Success" : "Failed", MessageBoxButton.OK,
+                        importResult.Success ? MessageBoxImage.Information : MessageBoxImage.Error);
 
                     if (importResult.Success)
                     {
-                        // Refresh current view
                         if (MainContentFrame.Content is CollegeManagementView)
                             MainContentFrame.Navigate(new CollegeManagementView());
                         else if (MainContentFrame.Content is TestManagementView)
@@ -180,11 +176,7 @@ namespace BiometricSuperAdmin
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show(
-                    $"Failed to import configuration:\n\n{ex.Message}",
-                    "Import Error",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
+                MessageBox.Show($"Import failed:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -200,23 +192,13 @@ namespace BiometricSuperAdmin
 
         private void ClearContextMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            var result = System.Windows.MessageBox.Show(
-                "Are you sure you want to clear the registration context?\n\n" +
-                "You will need to set it again before registering students.",
-                "Confirm Clear Context",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Question);
+            var result = MessageBox.Show("Clear registration context?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-            if (result == System.Windows.MessageBoxResult.Yes)
+            if (result == MessageBoxResult.Yes)
             {
                 RegistrationContext.ClearContext();
                 Title = "Biometric Verification System - SuperAdmin";
-                System.Windows.MessageBox.Show(
-                    "Registration context cleared successfully!",
-                    "Context Cleared",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Information);
-
+                MessageBox.Show("Context cleared!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 MainContentFrame.Navigate(new RegistrationContextView());
             }
         }
@@ -235,55 +217,24 @@ namespace BiometricSuperAdmin
                 if (saveDialog.ShowDialog() == true)
                 {
                     _databaseService.BackupDatabase(saveDialog.FileName);
-
-                    System.Windows.MessageBox.Show(
-                        $"✅ Database backed up successfully!\n\n📁 Location:\n{saveDialog.FileName}",
-                        "Backup Complete",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Information);
+                    MessageBox.Show($"✅ Backup complete!\n{saveDialog.FileName}", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show(
-                    $"Failed to backup database:\n\n{ex.Message}",
-                    "Backup Error",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
+                MessageBox.Show($"Backup failed:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void UserGuideMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.MessageBox.Show(
-                "📖 User Guide\n\n" +
-                "1. Setup: Create colleges and tests (or import configuration)\n" +
-                "2. Context: Set registration context (College + Test + Laptop ID)\n" +
-                "3. Register: Register students with fingerprints\n" +
-                "4. Export: Export master config for other laptops\n" +
-                "5. Merge: Combine data from multiple laptops\n" +
-                "6. Package: Generate verification packages for colleges\n\n" +
-                "For detailed help, refer to the documentation.",
-                "User Guide",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            MessageBox.Show("📖 Quick Guide:\n1. Create colleges/tests\n2. Set context\n3. Register students\n4. Export packages",
+                "User Guide", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.MessageBox.Show(
-                "🔐 Biometric Verification System\n\n" +
-                "Version: 1.0.0\n" +
-                "Build Date: November 2024\n\n" +
-                "SuperAdmin Application for:\n" +
-                "• College and test management\n" +
-                "• Student registration with fingerprints\n" +
-                "• Multi-laptop data synchronization\n" +
-                "• Verification package generation\n\n" +
-                "© 2024 - All Rights Reserved",
-                "About",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            MessageBox.Show("🔐 Biometric System v1.0.0\n© 2024", "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
@@ -293,13 +244,9 @@ namespace BiometricSuperAdmin
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            var result = System.Windows.MessageBox.Show(
-                "Are you sure you want to exit the application?",
-                "Confirm Exit",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Question);
+            var result = MessageBox.Show("Exit application?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-            if (result == System.Windows.MessageBoxResult.No)
+            if (result == MessageBoxResult.No)
             {
                 e.Cancel = true;
                 return;
