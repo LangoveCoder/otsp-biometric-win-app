@@ -31,7 +31,6 @@ namespace BiometricSuperAdmin.Views
         {
             var context = RegistrationContext.GetCurrentContext();
 
-            MessageBox.Show($"Context: {context?.CollegeName ?? "NULL"}"); // DEBUG
 
             if (context != null)
             {
