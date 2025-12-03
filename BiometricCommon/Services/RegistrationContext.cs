@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text.Json;
 
-namespace BiometricSuperAdmin.Views
+namespace BiometricCommon.Services  // ✅ CORRECT
 {
     public class RegistrationContext
     {

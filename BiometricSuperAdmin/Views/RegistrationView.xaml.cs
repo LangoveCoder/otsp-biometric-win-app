@@ -6,7 +6,6 @@ using System.Windows.Media.Imaging;
 using BiometricCommon.Database;
 using BiometricCommon.Models;
 using BiometricCommon.Services;
-using BiometricSuperAdmin.Views;
 using Microsoft.EntityFrameworkCore;
 
 namespace BiometricSuperAdmin.Views
@@ -21,16 +20,18 @@ namespace BiometricSuperAdmin.Views
             InitializeComponent();
             _scannerService = scannerService;
             _context = context;
+
+            Loaded += Page_Loaded;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             LoadContext();
         }
+
         private void LoadContext()
         {
             var context = RegistrationContext.GetCurrentContext();
-
 
             if (context != null)
             {
@@ -45,6 +46,7 @@ namespace BiometricSuperAdmin.Views
                 DeviceTextBox.Text = Environment.MachineName;
             }
         }
+
         private async void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -83,7 +85,7 @@ namespace BiometricSuperAdmin.Views
 
                 // Check if student already exists
                 var existingStudent = await _context.Students
-    .FirstOrDefaultAsync(s => s.RollNumber == rollNumber);
+                    .FirstOrDefaultAsync(s => s.RollNumber == rollNumber);
                 if (existingStudent != null)
                 {
                     MessageBox.Show(
@@ -184,12 +186,12 @@ namespace BiometricSuperAdmin.Views
                     return;
                 }
 
-                // Create student record
+                // Create student record using context from RegistrationContext
                 var student = new Student
                 {
                     RollNumber = rollNumber,
-                    CollegeId = 1, // TODO: Get from context
-                    TestId = 1, // TODO: Get from context
+                    CollegeId = registrationContext.CollegeId,
+                    TestId = registrationContext.TestId,
                     FingerprintTemplate = captureResult.Template,
                     RegistrationDate = DateTime.Now,
                     IsVerified = false

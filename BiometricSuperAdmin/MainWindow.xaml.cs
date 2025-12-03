@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using BiometricCommon.Database;
@@ -83,6 +84,7 @@ namespace BiometricSuperAdmin
                 Title = $"Biometric Verification System - {context.LaptopId} - {context.CollegeName}";
             }
         }
+
         private void NavigationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (NavigationListBox == null || NavigationListBox.SelectedIndex < 0)
@@ -91,30 +93,8 @@ namespace BiometricSuperAdmin
             if (MainContentFrame == null)
                 return;
 
-            // Check context for Registration page
-            if (NavigationListBox.SelectedIndex == 1)
-            {
-                var context = RegistrationContext.GetCurrentContext();
-                if (context == null)
-                {
-                    MessageBox.Show("Please set registration context first!", "Context Not Set",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    NavigationListBox.SelectedIndex = 0;
-                    return;
-                }
-
-                // Also check if college exists
-                using (var db = new BiometricContext())
-                {
-                    if (!db.Colleges.Any())
-                    {
-                        MessageBox.Show("No colleges found! Please create a college first.",
-                            "No Colleges", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        NavigationListBox.SelectedIndex = 2; // Go to College Management
-                        return;
-                    }
-                }
-            }
+            // Check context for Registration page - REMOVED THE CHECK
+            // We'll let the Registration page itself handle the context check
 
             switch (NavigationListBox.SelectedIndex)
             {
@@ -126,6 +106,7 @@ namespace BiometricSuperAdmin
                 case 5: MainContentFrame.Navigate(new ReportsView()); break;
             }
         }
+
         private async void ExportConfigMenuItem_Click(object sender, RoutedEventArgs e)
         {
             try
