@@ -10,11 +10,32 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BiometricCommon\BiometricCommon.csproj" />
   </ItemGroup>
-
+<!-- Copy SecuGen DLLs from BiometricCommon to output directory -->
+  <ItemGroup>
+    <None Include="..\BiometricCommon\SecuGenSDK\SecuGen.FDxSDKPro.Windows.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\BiometricCommon\SecuGenSDK\sgfplib.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\BiometricCommon\SecuGenSDK\sgfpamx.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\BiometricCommon\SecuGenSDK\sgwsqlib.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\BiometricCommon\SecuGenSDK\sgfdusdax64.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\BiometricCommon\SecuGenSDK\sgbledev.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

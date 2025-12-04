@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BiometricCommon.Database;
@@ -194,7 +193,7 @@ namespace BiometricCollegeVerify.Services
         }
 
         /// <summary>
-        /// Verify database integrity
+        /// Verify database integrity - ENHANCED for new Student model compatibility
         /// </summary>
         private async Task<bool> VerifyDatabaseAsync(string dbPath)
         {
@@ -202,18 +201,36 @@ namespace BiometricCollegeVerify.Services
             {
                 using (var context = new BiometricContext(dbPath))
                 {
-                    // Check if database can be opened
+                    // ✅ Ensure database schema is created and ready
+                    await context.Database.EnsureCreatedAsync();
+
+                    // ✅ Verify we can actually connect to the database
+                    var canConnect = await context.Database.CanConnectAsync();
+                    if (!canConnect)
+                    {
+                        System.Diagnostics.Debug.WriteLine("❌ Database exists but cannot connect");
+                        return false;
+                    }
+
+                    // ✅ Open connection for verification
                     await context.Database.OpenConnectionAsync();
 
-                    // Verify required tables exist
+                    // ✅ Verify required tables exist and have data
                     var hasColleges = await context.Colleges.AnyAsync();
                     var hasTests = await context.Tests.AnyAsync();
 
-                    return hasColleges && hasTests; // Students can be zero
+                    // ✅ Explicitly close connection to prevent locks
+                    await context.Database.CloseConnectionAsync();
+
+                    System.Diagnostics.Debug.WriteLine($"✓ Database verified - Colleges: {hasColleges}, Tests: {hasTests}");
+
+                    // Students can be zero, but colleges and tests must exist
+                    return hasColleges && hasTests;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"❌ Database verification failed: {ex.Message}");
                 return false;
             }
         }
@@ -251,7 +268,7 @@ namespace BiometricCollegeVerify.Services
         }
 
         /// <summary>
-        /// Get database connection string
+        /// Get database path for use by other services
         /// </summary>
         public string GetDatabasePath()
         {

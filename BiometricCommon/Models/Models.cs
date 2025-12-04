@@ -18,6 +18,19 @@ namespace BiometricCommon.Models
         public string RollNumber { get; set; } = string.Empty;
 
         [Required]
+        [MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(20)]
+        public string CNIC { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Student photo from Excel (ID photo taken before test)
+        /// </summary>
+        public byte[]? StudentPhoto { get; set; }
+
+        [Required]
         public int CollegeId { get; set; }
 
         [Required]
@@ -28,6 +41,15 @@ namespace BiometricCommon.Models
         /// </summary>
         [Required]
         public byte[] FingerprintTemplate { get; set; } = Array.Empty<byte>();
+
+        /// <summary>
+        /// Fingerprint image for display purposes (grayscale pixel data)
+        /// </summary>
+        public byte[]? FingerprintImage { get; set; }
+
+        public int FingerprintImageWidth { get; set; }
+
+        public int FingerprintImageHeight { get; set; }
 
         public DateTime RegistrationDate { get; set; } = DateTime.Now;
 
@@ -262,7 +284,13 @@ namespace BiometricCommon.Models
     public class ExportStudent
     {
         public string RollNumber { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string CNIC { get; set; } = string.Empty;
+        public byte[]? StudentPhoto { get; set; }
         public byte[] FingerprintTemplate { get; set; } = Array.Empty<byte>();
+        public byte[]? FingerprintImage { get; set; }
+        public int FingerprintImageWidth { get; set; }
+        public int FingerprintImageHeight { get; set; }
         public DateTime RegistrationDate { get; set; }
         public string DeviceId { get; set; } = string.Empty;
     }

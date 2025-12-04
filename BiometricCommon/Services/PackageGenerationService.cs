@@ -356,9 +356,15 @@ namespace BiometricCommon.Services
                     collegeContext.Students.Add(new Student
                     {
                         RollNumber = student.RollNumber,
+                        Name = student.Name,
+                        CNIC = student.CNIC,
+                        StudentPhoto = student.StudentPhoto,
+                        FingerprintTemplate = student.FingerprintTemplate,
+                        FingerprintImage = student.FingerprintImage,
+                        FingerprintImageWidth = student.FingerprintImageWidth,
+                        FingerprintImageHeight = student.FingerprintImageHeight,
                         CollegeId = student.CollegeId,
                         TestId = student.TestId,
-                        FingerprintTemplate = student.FingerprintTemplate,
                         RegistrationDate = student.RegistrationDate,
                         DeviceId = student.DeviceId,
                         IsVerified = false,

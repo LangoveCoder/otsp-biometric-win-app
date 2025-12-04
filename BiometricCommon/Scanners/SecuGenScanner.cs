@@ -255,7 +255,7 @@ namespace BiometricCommon.Scanners
                     }
 
                     bool matched = false;
-                    int err = _fpDevice.MatchTemplate(template1, template2, 0, ref matched);
+                    int err = _fpDevice.MatchTemplate(template1, template2, SGFPMSecurityLevel.ABOVE_NORMAL, ref matched);
 
                     if (err != (int)SGFPMError.ERROR_NONE)
                     {
@@ -267,12 +267,14 @@ namespace BiometricCommon.Scanners
                         };
                     }
 
-                    int confidence = matched ? 95 : 0;
+                    // Get actual matching score
+                    int score = 0;
+                    _fpDevice.GetMatchingScore(template1, template2, ref score);
 
                     return new FingerprintMatchResult
                     {
                         IsMatch = matched,
-                        ConfidenceScore = confidence,
+                        ConfidenceScore = score > 0 ? score : (matched ? 85 : 0),
                         Message = matched ? "Matched!" : "No match",
                         Quality = matched ? MatchQuality.Excellent : MatchQuality.Poor
                     };

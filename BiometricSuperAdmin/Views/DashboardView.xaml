@@ -41,7 +41,7 @@
                     Rows="1" 
                     Columns="4"
                     Margin="0,0,0,16">
-            
+
             <!-- Total Students Card -->
             <Border Style="{StaticResource StatsCard}">
                 <StackPanel>
@@ -139,48 +139,63 @@
             <Border Grid.Column="1" 
                     Style="{StaticResource StatsCard}"
                     Margin="8,0,0,0">
-                <StackPanel>
-                    <TextBlock Text="Quick Actions"
-                             Style="{StaticResource SectionHeader}"/>
 
-                    <Button x:Name="RegisterStudentButton"
-                          Style="{StaticResource PrimaryButton}"
-                          Click="RegisterStudentButton_Click"
-                          Margin="0,8"
-                          Content="➕ Register Student"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Quick Actions"
+                                 Style="{StaticResource SectionHeader}"/>
 
-                    <Button x:Name="AddCollegeButton"
-                          Style="{StaticResource SecondaryButton}"
-                          Click="AddCollegeButton_Click"
-                          Margin="0,8"
-                          Content="🏫 Add College"/>
+                        <Button x:Name="RegisterStudentButton"
+                              Style="{StaticResource PrimaryButton}"
+                              Click="RegisterStudentButton_Click"
+                              Margin="0,8"
+                              Content="➕ Register Student"/>
 
-                    <Button x:Name="CreateTestButton"
-                          Style="{StaticResource SecondaryButton}"
-                          Click="CreateTestButton_Click"
-                          Margin="0,8"
-                          Content="➕ Create Test"/>
+                        <Button x:Name="ViewStudentsButton"
+                              Style="{StaticResource SecondaryButton}"
+                              Click="ViewStudentsButton_Click"
+                              Margin="0,8"
+                              Content="👥 View Students List"/>
 
-                    <Button x:Name="GeneratePackageButton"
-                          Style="{StaticResource PrimaryButton}"
-                          Click="GeneratePackageButton_Click"
-                          Margin="0,8"
-                          Content="📦 Generate Package"/>
+                        <Button x:Name="AddCollegeButton"
+                              Style="{StaticResource SecondaryButton}"
+                              Click="AddCollegeButton_Click"
+                              Margin="0,8"
+                              Content="🏫 Add College"/>
 
-                    <Separator Margin="0,16" Background="#E0E0E0"/>
+                        <Button x:Name="CreateTestButton"
+                              Style="{StaticResource SecondaryButton}"
+                              Click="CreateTestButton_Click"
+                              Margin="0,8"
+                              Content="➕ Create Test"/>
 
-                    <Button x:Name="ViewReportsButton"
-                          Style="{StaticResource SecondaryButton}"
-                          Click="ViewReportsButton_Click"
-                          Margin="0,8"
-                          Content="📊 View Reports"/>
+                        <Button x:Name="GeneratePackageButton"
+                              Style="{StaticResource PrimaryButton}"
+                              Click="GeneratePackageButton_Click"
+                              Margin="0,8"
+                              Content="📦 Generate Package"/>
 
-                    <Button x:Name="RefreshButton"
-                          Style="{StaticResource SecondaryButton}"
-                          Click="RefreshButton_Click"
-                          Margin="0,8"
-                          Content="🔄 Refresh Dashboard"/>
-                </StackPanel>
+                        <Separator Margin="0,16" Background="#E0E0E0"/>
+
+                        <Button x:Name="ViewReportsButton"
+                              Style="{StaticResource SecondaryButton}"
+                              Click="ViewReportsButton_Click"
+                              Margin="0,8"
+                              Content="📊 View Reports"/>
+
+                        <Button x:Name="RefreshButton"
+                              Style="{StaticResource SecondaryButton}"
+                              Click="RefreshButton_Click"
+                              Margin="0,8"
+                              Content="🔄 Refresh Dashboard"/>
+
+                        <Button x:Name="ImportStudentsButton"
+                              Style="{StaticResource PrimaryButton}"
+                              Click="ImportStudentsButton_Click"
+                              Margin="0,8"
+                              Content="📥 Import Students"/>
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
         </Grid>
 

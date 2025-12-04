@@ -11,7 +11,7 @@ using BiometricCommon.Encryption;
 namespace BiometricCommon.Services
 {
     /// <summary>
-    /// Service for exporting and importing master configuration (colleges and tests)
+    /// Service for exporting and importing master configuration (colleges, tests, and students)
     /// This allows distributing the same setup to multiple laptops
     /// </summary>
     public class MasterConfigService
@@ -24,15 +24,15 @@ namespace BiometricCommon.Services
         }
 
         /// <summary>
-        /// Export master configuration (colleges and tests) to encrypted file
+        /// Export master configuration (colleges, tests, and students) to encrypted file
         /// </summary>
         public async Task<string> ExportMasterConfigAsync(string outputPath)
         {
             try
             {
-                // Get all colleges and tests (no students)
                 var colleges = await Task.Run(() => _context.Colleges.ToList());
                 var tests = await Task.Run(() => _context.Tests.ToList());
+                var students = await Task.Run(() => _context.Students.ToList());
 
                 var config = new MasterConfiguration
                 {
@@ -60,24 +60,34 @@ namespace BiometricCommon.Services
                         RegistrationStartDate = t.RegistrationStartDate,
                         RegistrationEndDate = t.RegistrationEndDate,
                         IsActive = t.IsActive
+                    }).ToList(),
+                    Students = students.Select(s => new StudentConfig
+                    {
+                        Id = s.Id,
+                        RollNumber = s.RollNumber,
+                        Name = s.Name,
+                        CNIC = s.CNIC,
+                        CollegeId = s.CollegeId,
+                        TestId = s.TestId,
+                        StudentPhoto = s.StudentPhoto,
+                        FingerprintTemplate = s.FingerprintTemplate,
+                        FingerprintImage = s.FingerprintImage,
+                        FingerprintImageWidth = s.FingerprintImageWidth,
+                        FingerprintImageHeight = s.FingerprintImageHeight,
+                        RegistrationDate = s.RegistrationDate,
+                        DeviceId = s.DeviceId
                     }).ToList()
                 };
 
-                // Serialize to JSON
-                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions
-                {
-                    WriteIndented = false
-                });
-
-                // Encrypt and save (Encrypt returns Base64 string)
+                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = false });
                 var encrypted = EncryptionService.Encrypt(json, "MasterConfig2024!");
                 await File.WriteAllTextAsync(outputPath, encrypted);
 
-                return $"Exported {colleges.Count} colleges and {tests.Count} tests successfully!";
+                return $"Exported {colleges.Count} colleges, {tests.Count} tests, and {students.Count} students!";
             }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to export master configuration: {ex.Message}", ex);
+                throw new Exception($"Failed to export: {ex.Message}", ex);
             }
         }
 
@@ -88,11 +98,9 @@ namespace BiometricCommon.Services
         {
             try
             {
-                // Read and decrypt file
                 var encrypted = await File.ReadAllTextAsync(filePath);
                 var json = EncryptionService.Decrypt(encrypted, "MasterConfig2024!");
 
-                // Deserialize
                 var config = JsonSerializer.Deserialize<MasterConfiguration>(json);
                 if (config == null)
                     throw new Exception("Invalid configuration file");
@@ -103,19 +111,16 @@ namespace BiometricCommon.Services
                     ImportDate = DateTime.Now
                 };
 
-                // Check if database already has data
                 var existingColleges = _context.Colleges.ToList();
                 var existingTests = _context.Tests.ToList();
 
                 if (existingColleges.Count > 0 || existingTests.Count > 0)
                 {
-                    // Database not empty - merge/update mode
                     result.WasUpdate = true;
                     await MergeConfigurationAsync(config, result);
                 }
                 else
                 {
-                    // Empty database - fresh import
                     result.WasUpdate = false;
                     await ImportFreshConfigurationAsync(config, result);
                 }
@@ -159,12 +164,11 @@ namespace BiometricCommon.Services
 
             await _context.SaveChangesAsync();
 
-            // Now import tests (need college IDs from database)
+            // Import tests
             var collegeMapping = _context.Colleges.ToDictionary(c => c.Code, c => c.Id);
 
             foreach (var testConfig in config.Tests)
             {
-                // Find the college by code
                 var college = _context.Colleges.FirstOrDefault(c => c.Id == testConfig.CollegeId);
                 if (college == null)
                 {
@@ -188,6 +192,46 @@ namespace BiometricCommon.Services
                 _context.Tests.Add(test);
                 result.TestsImported++;
             }
+
+            await _context.SaveChangesAsync();
+
+            // Import students
+            if (config.Students != null && config.Students.Count > 0)
+            {
+                foreach (var studentConfig in config.Students)
+                {
+                    var college = _context.Colleges.FirstOrDefault(c => c.Id == studentConfig.CollegeId);
+                    var test = _context.Tests.FirstOrDefault(t => t.Id == studentConfig.TestId);
+
+                    if (college == null || test == null)
+                    {
+                        result.Warnings.Add($"Student '{studentConfig.RollNumber}' skipped - college or test not found");
+                        continue;
+                    }
+
+                    var student = new Student
+                    {
+                        RollNumber = studentConfig.RollNumber,
+                        Name = studentConfig.Name,
+                        CNIC = studentConfig.CNIC,
+                        CollegeId = studentConfig.CollegeId,
+                        TestId = studentConfig.TestId,
+                        StudentPhoto = studentConfig.StudentPhoto,
+                        FingerprintTemplate = studentConfig.FingerprintTemplate,
+                        FingerprintImage = studentConfig.FingerprintImage,
+                        FingerprintImageWidth = studentConfig.FingerprintImageWidth,
+                        FingerprintImageHeight = studentConfig.FingerprintImageHeight,
+                        RegistrationDate = studentConfig.RegistrationDate,
+                        DeviceId = studentConfig.DeviceId,
+                        IsVerified = false
+                    };
+
+                    _context.Students.Add(student);
+                    result.StudentsImported++;
+                }
+
+                await _context.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -202,7 +246,6 @@ namespace BiometricCommon.Services
 
                 if (existing != null)
                 {
-                    // Update existing
                     existing.Name = collegeConfig.Name;
                     existing.Address = collegeConfig.Address;
                     existing.ContactPerson = collegeConfig.ContactPerson;
@@ -214,7 +257,6 @@ namespace BiometricCommon.Services
                 }
                 else
                 {
-                    // Add new
                     var college = new College
                     {
                         Name = collegeConfig.Name,
@@ -247,7 +289,6 @@ namespace BiometricCommon.Services
 
                 if (existing != null)
                 {
-                    // Update existing
                     existing.Name = testConfig.Name;
                     existing.Description = testConfig.Description;
                     existing.TestDate = testConfig.TestDate;
@@ -259,7 +300,6 @@ namespace BiometricCommon.Services
                 }
                 else
                 {
-                    // Add new
                     var test = new Test
                     {
                         Name = testConfig.Name,
@@ -275,6 +315,51 @@ namespace BiometricCommon.Services
                     _context.Tests.Add(test);
                     result.TestsImported++;
                 }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Import students (add new only, don't update existing)
+            if (config.Students != null && config.Students.Count > 0)
+            {
+                foreach (var studentConfig in config.Students)
+                {
+                    var existing = _context.Students.FirstOrDefault(s => s.RollNumber == studentConfig.RollNumber);
+
+                    if (existing == null)
+                    {
+                        var college = _context.Colleges.FirstOrDefault(c => c.Id == studentConfig.CollegeId);
+                        var test = _context.Tests.FirstOrDefault(t => t.Id == studentConfig.TestId);
+
+                        if (college == null || test == null)
+                        {
+                            result.Warnings.Add($"Student '{studentConfig.RollNumber}' skipped - college or test not found");
+                            continue;
+                        }
+
+                        var student = new Student
+                        {
+                            RollNumber = studentConfig.RollNumber,
+                            Name = studentConfig.Name,
+                            CNIC = studentConfig.CNIC,
+                            CollegeId = studentConfig.CollegeId,
+                            TestId = studentConfig.TestId,
+                            StudentPhoto = studentConfig.StudentPhoto,
+                            FingerprintTemplate = studentConfig.FingerprintTemplate,
+                            FingerprintImage = studentConfig.FingerprintImage,
+                            FingerprintImageWidth = studentConfig.FingerprintImageWidth,
+                            FingerprintImageHeight = studentConfig.FingerprintImageHeight,
+                            RegistrationDate = studentConfig.RegistrationDate,
+                            DeviceId = studentConfig.DeviceId,
+                            IsVerified = false
+                        };
+
+                        _context.Students.Add(student);
+                        result.StudentsImported++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
             }
         }
 
@@ -315,6 +400,7 @@ namespace BiometricCommon.Services
         public DateTime ExportDate { get; set; }
         public List<CollegeConfig> Colleges { get; set; } = new();
         public List<TestConfig> Tests { get; set; } = new();
+        public List<StudentConfig> Students { get; set; } = new();
     }
 
     /// <summary>
@@ -349,6 +435,26 @@ namespace BiometricCommon.Services
     }
 
     /// <summary>
+    /// Student configuration
+    /// </summary>
+    public class StudentConfig
+    {
+        public int Id { get; set; }
+        public string RollNumber { get; set; } = string.Empty;
+        public string? Name { get; set; }
+        public string? CNIC { get; set; }
+        public int CollegeId { get; set; }
+        public int TestId { get; set; }
+        public byte[]? StudentPhoto { get; set; }
+        public byte[]? FingerprintTemplate { get; set; }
+        public byte[]? FingerprintImage { get; set; }
+        public int FingerprintImageWidth { get; set; }
+        public int FingerprintImageHeight { get; set; }
+        public DateTime RegistrationDate { get; set; }
+        public string? DeviceId { get; set; }
+    }
+
+    /// <summary>
     /// Import result
     /// </summary>
     public class ImportResult
@@ -360,6 +466,7 @@ namespace BiometricCommon.Services
         public int CollegesUpdated { get; set; }
         public int TestsImported { get; set; }
         public int TestsUpdated { get; set; }
+        public int StudentsImported { get; set; }
         public List<string> Warnings { get; set; } = new();
         public string ErrorMessage { get; set; } = string.Empty;
 
@@ -378,6 +485,8 @@ namespace BiometricCommon.Services
                 message += $"✅ {TestsImported} new tests added\n";
             if (TestsUpdated > 0)
                 message += $"🔄 {TestsUpdated} tests updated\n";
+            if (StudentsImported > 0)
+                message += $"✅ {StudentsImported} students imported\n";
 
             if (Warnings.Count > 0)
             {

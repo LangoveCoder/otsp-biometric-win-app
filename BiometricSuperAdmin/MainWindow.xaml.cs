@@ -7,6 +7,7 @@ using BiometricCommon.Models;
 using BiometricCommon.Scanners;
 using BiometricCommon.Services;
 using BiometricSuperAdmin.Views;
+using BiometricSuperAdmin.Services;
 using Microsoft.Win32;
 
 namespace BiometricSuperAdmin
@@ -17,6 +18,7 @@ namespace BiometricSuperAdmin
         private readonly MasterConfigService _configService;
         public readonly IFingerprintScanner _scannerService;
         public readonly BiometricContext _context;
+        private NavigationValidator? _validator;
 
         public MainWindow()
         {
@@ -25,6 +27,7 @@ namespace BiometricSuperAdmin
             _configService = new MasterConfigService();
             _context = new BiometricContext();
             _scannerService = new SecuGenScanner();
+            _validator = new NavigationValidator(_context);
 
             Loaded += MainWindow_Loaded;
             InitializeScannerAsync();
@@ -83,6 +86,53 @@ namespace BiometricSuperAdmin
                 MainContentFrame.Navigate(new DashboardView());
                 Title = $"Biometric Verification System - {context.LaptopId} - {context.CollegeName}";
             }
+
+            // Update navigation state
+            UpdateNavigationState();
+        }
+
+        private void UpdateNavigationState()
+        {
+            try
+            {
+                if (_validator == null) return;
+
+                // Get validation results
+                var canRegister = _validator.CanRegisterStudents();
+                var canPackage = _validator.CanGeneratePackage();
+
+                // Update navigation list items (by index)
+                if (NavigationListBox != null && NavigationListBox.Items.Count > 0)
+                {
+                    // Registration (index 1)
+                    var regItem = NavigationListBox.Items[1] as ListBoxItem;
+                    if (regItem != null)
+                    {
+                        regItem.IsEnabled = canRegister.IsValid;
+                        regItem.ToolTip = canRegister.IsValid ? null : canRegister.Message;
+                    }
+
+                    // Package Generator (index 4)
+                    var pkgItem = NavigationListBox.Items[4] as ListBoxItem;
+                    if (pkgItem != null)
+                    {
+                        pkgItem.IsEnabled = canPackage.IsValid;
+                        pkgItem.ToolTip = canPackage.IsValid ? null : canPackage.Message;
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Navigation updated - Students: {_validator.GetStudentCount()}, Registered: {_validator.GetRegisteredCount()}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating navigation: {ex.Message}");
+            }
+        }
+
+        public void RefreshNavigationState()
+        {
+            _validator = new NavigationValidator(_context);
+            UpdateNavigationState();
         }
 
         private void NavigationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -93,21 +143,39 @@ namespace BiometricSuperAdmin
             if (MainContentFrame == null)
                 return;
 
-            // ✅ CHECK CONTEXT FOR REGISTRATION PAGE ONLY
-            if (NavigationListBox.SelectedIndex == 1) // Registration page
+            // ✅ VALIDATE BEFORE NAVIGATION
+            _validator = new NavigationValidator(_context);
+
+            // Check Registration page (index 1)
+            if (NavigationListBox.SelectedIndex == 1)
             {
-                var context = RegistrationContext.GetCurrentContext();
-                if (context == null)
+                var result = _validator.CanRegisterStudents();
+                if (!result.IsValid)
                 {
                     MessageBox.Show(
-                        "Registration context not set!\n\n" +
-                        "Please set the college, test, and laptop ID first.\n\n" +
-                        "Go to: Tools → Set Registration Context",
-                        "Context Required",
+                        result.Message,
+                        "Prerequisites Not Met",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
 
-                    NavigationListBox.SelectedIndex = 0; // Reset to Dashboard
+                    NavigationListBox.SelectedIndex = 0;
+                    return;
+                }
+            }
+
+            // Check Package Generator (index 4)
+            if (NavigationListBox.SelectedIndex == 4)
+            {
+                var result = _validator.CanGeneratePackage();
+                if (!result.IsValid)
+                {
+                    MessageBox.Show(
+                        result.Message,
+                        "Prerequisites Not Met",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    NavigationListBox.SelectedIndex = 0;
                     return;
                 }
             }
@@ -121,6 +189,8 @@ namespace BiometricSuperAdmin
                 case 4: MainContentFrame.Navigate(new PackageGeneratorView()); break;
                 case 5: MainContentFrame.Navigate(new ReportsView()); break;
             }
+
+            UpdateNavigationState();
         }
 
         private async void ExportConfigMenuItem_Click(object sender, RoutedEventArgs e)
@@ -168,6 +238,8 @@ namespace BiometricSuperAdmin
                             MainContentFrame.Navigate(new CollegeManagementView());
                         else if (MainContentFrame.Content is TestManagementView)
                             MainContentFrame.Navigate(new TestManagementView());
+
+                        RefreshNavigationState();
                     }
                 }
             }
@@ -185,6 +257,7 @@ namespace BiometricSuperAdmin
         private void SetContextMenuItem_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new RegistrationContextView());
+            RefreshNavigationState();
         }
 
         private void ClearContextMenuItem_Click(object sender, RoutedEventArgs e)
@@ -197,6 +270,7 @@ namespace BiometricSuperAdmin
                 Title = "Biometric Verification System - SuperAdmin";
                 MessageBox.Show("Context cleared!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 MainContentFrame.Navigate(new RegistrationContextView());
+                RefreshNavigationState();
             }
         }
 
@@ -225,7 +299,7 @@ namespace BiometricSuperAdmin
 
         private void UserGuideMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("📖 Quick Guide:\n1. Create colleges/tests\n2. Set context\n3. Register students\n4. Export packages",
+            MessageBox.Show("📖 Quick Guide:\n1. Create colleges/tests\n2. Set context\n3. Import students\n4. Register\n5. Export packages",
                 "User Guide", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 

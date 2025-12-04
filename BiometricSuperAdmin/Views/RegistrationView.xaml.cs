@@ -1,5 +1,8 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,6 +19,7 @@ namespace BiometricSuperAdmin.Views
     {
         private readonly IFingerprintScanner _scannerService;
         private readonly BiometricContext? _context;
+        private Student? _currentStudent; // Store loaded student
 
         public RegistrationView(IFingerprintScanner scannerService, BiometricContext? context)
         {
@@ -97,6 +101,125 @@ namespace BiometricSuperAdmin.Views
             }
         }
 
+        // NEW: Load student info before fingerprint capture
+        private async void LoadStudentButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var registrationContext = RegistrationContext.GetCurrentContext();
+                if (registrationContext == null)
+                {
+                    MessageBox.Show(
+                        "Registration context not set!\n\nPlease set context first.",
+                        "Context Required",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (_context == null)
+                {
+                    MessageBox.Show("Database not available!", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string rollNumber = RollNumberTextBox.Text?.Trim();
+
+                if (string.IsNullOrWhiteSpace(rollNumber) || rollNumber.Length != 5)
+                {
+                    MessageBox.Show("Enter valid 5-digit roll number", "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Fetch student from imported list
+                var student = await _context.Students
+                    .Include(s => s.College)
+                    .Include(s => s.Test)
+                    .FirstOrDefaultAsync(s => s.RollNumber == rollNumber &&
+                                            s.CollegeId == registrationContext.CollegeId &&
+                                            s.TestId == registrationContext.TestId);
+
+                if (student == null)
+                {
+                    MessageBox.Show(
+                        $"Roll Number: {rollNumber}\n\n" +
+                        "Not found in imported student list.\n\n" +
+                        "Import Excel first.",
+                        "Not Found",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Check if already has fingerprint
+                if (student.FingerprintTemplate != null && student.FingerprintTemplate.Length > 0)
+                {
+                    var result = MessageBox.Show(
+                        $"Roll: {student.RollNumber}\n" +
+                        $"Name: {student.Name}\n" +
+                        $"CNIC: {student.CNIC}\n\n" +
+                        "Already registered. Register again?",
+                        "Already Registered",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (result != MessageBoxResult.Yes)
+                        return;
+                }
+
+                // Display student info in UI
+                NameText.Text = student.Name;
+                CnicText.Text = student.CNIC;
+
+                // Display student photo if exists
+                if (student.StudentPhoto != null && student.StudentPhoto.Length > 0)
+                {
+                    try
+                    {
+                        var bitmap = new BitmapImage();
+                        using (var ms = new MemoryStream(student.StudentPhoto))
+                        {
+                            bitmap.BeginInit();
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.StreamSource = ms;
+                            bitmap.EndInit();
+                        }
+                        StudentPhotoImage.Source = bitmap;
+                        StudentPhotoImage.Visibility = Visibility.Visible;
+                    }
+                    catch
+                    {
+                        StudentPhotoImage.Visibility = Visibility.Collapsed;
+                    }
+                }
+
+                // Show student info panel
+                StudentInfoPanel.Visibility = Visibility.Visible;
+
+                // Enable fingerprint capture
+                RegisterButton.IsEnabled = true;
+
+                // Store current student
+                _currentStudent = student;
+
+                MessageBox.Show(
+                    $"Student loaded!\n\n" +
+                    $"Roll: {student.RollNumber}\n" +
+                    $"Name: {student.Name}\n\n" +
+                    "Click Register to capture fingerprint.",
+                    "Ready",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private async void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -168,20 +291,13 @@ namespace BiometricSuperAdmin.Views
 
                 System.Diagnostics.Debug.WriteLine($"Roll Number: {rollNumber} (Valid 5-digit format)");
 
-                // Check if student already exists
-                var existingStudent = await _context.Students
-                    .FirstOrDefaultAsync(s => s.RollNumber == rollNumber
-                                           && s.CollegeId == registrationContext.CollegeId
-                                           && s.TestId == registrationContext.TestId);
-
-                if (existingStudent != null)
+                // NEW: If student not loaded, load first
+                if (_currentStudent == null || _currentStudent.RollNumber != rollNumber)
                 {
                     MessageBox.Show(
-                        $"A student with roll number '{rollNumber}' already exists!\n\n" +
-                        $"College: {registrationContext.CollegeName}\n" +
-                        $"Test: {registrationContext.TestName}\n" +
-                        $"Registered on: {existingStudent.RegistrationDate:yyyy-MM-dd HH:mm:ss}",
-                        "Duplicate Roll Number",
+                        "Please load student info first!\n\n" +
+                        "Click 'Load Student' button.",
+                        "Load Required",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
                     return;
@@ -225,6 +341,11 @@ namespace BiometricSuperAdmin.Views
 
                 // Capture fingerprint
                 var captureResult = await _scannerService.CaptureAsync();
+                System.Diagnostics.Debug.WriteLine($"Template captured: {captureResult.Template?.Length ?? 0} bytes");
+                if (captureResult.Template == null || captureResult.Template.Length == 0)
+                {
+                    MessageBox.Show("ERROR: Template is NULL or empty!", "Debug");
+                }
 
                 // Hide loading overlay
                 LoadingOverlay.Visibility = Visibility.Collapsed;
@@ -242,6 +363,31 @@ namespace BiometricSuperAdmin.Views
                     return;
                 }
 
+                // ✅ CHECK QUALITY FIRST (70% minimum)
+                if (captureResult.QualityScore < 70)
+                {
+                    MessageBox.Show(
+                        $"❌ Poor Quality: {captureResult.QualityScore}%\n\n" +
+                        "Minimum required: 70%\n\n" +
+                        "Tips to improve:\n" +
+                        "• Moisturize your finger slightly\n" +
+                        "• Clean the scanner surface\n" +
+                        "• Press finger firmly and flat\n" +
+                        "• Keep finger still during scan\n\n" +
+                        "Please scan again.",
+                        "Quality Too Low",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                // ✅ CHECK TEMPLATE
+                if (captureResult.Template == null || captureResult.Template.Length == 0)
+                {
+                    MessageBox.Show("❌ Template generation failed!\n\nPlease try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
                 // Display the fingerprint image
                 if (captureResult.ImageData != null && captureResult.ImageWidth > 0 && captureResult.ImageHeight > 0)
                 {
@@ -250,7 +396,7 @@ namespace BiometricSuperAdmin.Views
                         captureResult.ImageWidth,
                         captureResult.ImageHeight,
                         captureResult.QualityScore,
-                        captureResult.Template?.Length ?? 0
+                        captureResult.Template.Length
                     );
                 }
 
@@ -260,6 +406,7 @@ namespace BiometricSuperAdmin.Views
                 var confirmResult = MessageBox.Show(
                     $"✅ Fingerprint CAPTURED successfully!\n\n" +
                     $"Roll Number: {rollNumber}\n" +
+                    $"Name: {_currentStudent.Name}\n" +
                     $"Quality Score: {captureResult.QualityScore}%\n" +
                     $"Template Size: {captureResult.Template?.Length ?? 0} bytes\n" +
                     $"Image Size: {captureResult.ImageWidth}x{captureResult.ImageHeight}\n\n" +
@@ -277,20 +424,16 @@ namespace BiometricSuperAdmin.Views
                     return;
                 }
 
-                // Create student record using context from RegistrationContext
-                var student = new Student
-                {
-                    RollNumber = rollNumber,
-                    CollegeId = registrationContext.CollegeId,
-                    TestId = registrationContext.TestId,
-                    FingerprintTemplate = captureResult.Template,
-                    RegistrationDate = DateTime.Now,
-                    DeviceId = registrationContext.LaptopId,
-                    IsVerified = false
-                };
+                // Update student with fingerprint data
+                _currentStudent.FingerprintTemplate = captureResult.Template;
+                _currentStudent.FingerprintImage = captureResult.ImageData;
+                _currentStudent.FingerprintImageWidth = captureResult.ImageWidth;
+                _currentStudent.FingerprintImageHeight = captureResult.ImageHeight;
+                _currentStudent.RegistrationDate = DateTime.Now;
+                _currentStudent.DeviceId = registrationContext.LaptopId;
+                _currentStudent.LastModifiedDate = DateTime.Now;
 
                 // Save to database
-                _context.Students.Add(student);
                 await _context.SaveChangesAsync();
 
                 System.Diagnostics.Debug.WriteLine($"✓✓✓ Student saved to database: {rollNumber}");
@@ -299,10 +442,12 @@ namespace BiometricSuperAdmin.Views
                 MessageBox.Show(
                     $"✅ Registration Complete!\n\n" +
                     $"Roll Number: {rollNumber}\n" +
+                    $"Name: {_currentStudent.Name}\n" +
+                    $"CNIC: {_currentStudent.CNIC}\n" +
                     $"College: {registrationContext.CollegeName}\n" +
                     $"Test: {registrationContext.TestName}\n" +
                     $"Fingerprint Quality: {captureResult.QualityScore}%\n" +
-                    $"Registered at: {student.RegistrationDate:yyyy-MM-dd HH:mm:ss}",
+                    $"Registered at: {_currentStudent.RegistrationDate:yyyy-MM-dd HH:mm:ss}",
                     "Success",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -392,7 +537,13 @@ namespace BiometricSuperAdmin.Views
         private void ClearForm()
         {
             RollNumberTextBox.Clear();
+            NameText.Text = "-";
+            CnicText.Text = "-";
+            StudentPhotoImage.Source = null;
+            StudentPhotoImage.Visibility = Visibility.Collapsed;
+            StudentInfoPanel.Visibility = Visibility.Collapsed;
             ClearFingerprintDisplay();
+            _currentStudent = null;
             RollNumberTextBox.Focus();
         }
 

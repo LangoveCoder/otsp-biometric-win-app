@@ -5,7 +5,8 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       mc:Ignorable="d"
       d:DesignHeight="768" d:DesignWidth="1400"
-      Background="#FAFAFA">
+      Background="#FAFAFA"
+      Loaded="Page_Loaded">
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -65,20 +66,19 @@
             </StackPanel>
         </Border>
 
-        <!-- Main Content Area -->
+        <!-- Main Content Area - Split into Form and Preview -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="600"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT: Registration Form -->
+            <!-- Registration Form (Left Side) - WITH SCROLLVIEWER -->
             <Border Grid.Column="0" 
                     Background="White" 
                     CornerRadius="8" 
                     Padding="32"
-                    VerticalAlignment="Top"
-                    Margin="0,0,12,0">
+                    VerticalAlignment="Stretch">
                 <Border.Effect>
                     <DropShadowEffect Color="#000000" 
                                       Opacity="0.1" 
@@ -87,100 +87,42 @@
                                       Direction="270"/>
                 </Border.Effect>
 
-                <StackPanel>
-                    <TextBlock Text="Enter student roll number and capture fingerprint" 
-                               FontSize="14"
-                               Foreground="#666"
-                               Margin="0,0,0,24"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Instructions -->
+                        <TextBlock Text="Enter roll number, load student, then capture fingerprint" 
+                                   FontSize="14"
+                                   Foreground="#666"
+                                   Margin="0,0,0,24"/>
 
-                    <!-- Roll Number Input with Validation Hint -->
-                    <TextBlock Text="Roll Number *" 
-                               FontWeight="SemiBold"
-                               Foreground="#333"
-                               Margin="0,0,0,8"/>
-
-                    <Grid Margin="0,0,0,8">
+                        <!-- Roll Number Input -->
+                        <TextBlock Text="Roll Number *" 
+                                   FontWeight="SemiBold"
+                                   Foreground="#333"
+                                   Margin="0,0,0,8"/>
                         <TextBox x:Name="RollNumberTextBox"
-                                 FontSize="20"
-                                 FontWeight="SemiBold"
-                                 Padding="16"
+                                 FontSize="16"
+                                 Padding="12"
                                  Background="#F5F5F5"
-                                 BorderBrush="#1976D2"
-                                 BorderThickness="2"
-                                 MaxLength="5"
-                                 TextAlignment="Center"
-                                 VerticalContentAlignment="Center"
-                                 Height="60"/>
-                    </Grid>
+                                 BorderBrush="#E0E0E0"
+                                 BorderThickness="1"
+                                 Margin="0,0,0,16"/>
 
-                    <!-- Validation Hint -->
-                    <Border Background="#E3F2FD" 
-                            CornerRadius="4" 
-                            Padding="12"
-                            Margin="0,0,0,24">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="ℹ️" 
-                                       FontSize="14" 
-                                       Margin="0,0,8,0"
-                                       VerticalAlignment="Center"/>
-                            <StackPanel>
-                                <TextBlock Text="Roll Number must be exactly 5 digits" 
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="#1976D2"/>
-                                <TextBlock Text="Example: 12345" 
-                                           FontSize="11"
-                                           Foreground="#666"
-                                           Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock Text="Fingerprint Capture" 
-                               FontWeight="SemiBold"
-                               Foreground="#333"
-                               Margin="0,0,0,8"/>
-
-                    <Border Background="#E3F2FD" 
-                            CornerRadius="8" 
-                            Padding="24"
-                            Margin="0,0,0,24">
-                        <StackPanel>
-                            <TextBlock Text="📌 Click Register to capture fingerprint" 
-                                       FontSize="14"
-                                       Foreground="#1976D2"
-                                       TextWrapping="Wrap"
-                                       HorizontalAlignment="Center"/>
-                            <TextBlock Text="Image will appear on right panel" 
-                                       FontSize="12"
-                                       Foreground="#666"
-                                       TextWrapping="Wrap"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,8,0,0"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Button Grid.Column="0"
-                                x:Name="RegisterButton"
-                                Content="📋 Register Student"
-                                Click="RegisterButton_Click"
-                                Background="#4CAF50"
+                        <!-- Load Student Button -->
+                        <Button x:Name="LoadStudentButton"
+                                Content="Load Student"
+                                Click="LoadStudentButton_Click"
+                                Background="#2196F3"
                                 Foreground="White"
-                                FontSize="16"
+                                FontSize="14"
                                 FontWeight="SemiBold"
-                                Padding="24,12"
+                                Padding="16,10"
                                 BorderThickness="0"
                                 Cursor="Hand"
-                                Margin="0,0,12,0">
+                                Margin="0,0,0,24">
                             <Button.Style>
                                 <Style TargetType="Button">
-                                    <Setter Property="Background" Value="#4CAF50"/>
+                                    <Setter Property="Background" Value="#2196F3"/>
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
@@ -195,56 +137,190 @@
                                     </Setter>
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#45A049"/>
-                                        </Trigger>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter Property="Background" Value="#BDBDBD"/>
-                                            <Setter Property="Cursor" Value="No"/>
+                                            <Setter Property="Background" Value="#1976D2"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
                             </Button.Style>
                         </Button>
 
-                        <Button Grid.Column="1"
-                                x:Name="ClearButton"
-                                Content="🗑️ Clear"
-                                Click="ClearButton_Click"
-                                Background="#757575"
-                                Foreground="White"
-                                FontSize="16"
-                                FontWeight="SemiBold"
-                                Padding="24,12"
-                                BorderThickness="0"
-                                Cursor="Hand">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="#757575"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}"
-                                                        CornerRadius="6"
-                                                        Padding="{TemplateBinding Padding}">
-                                                    <ContentPresenter HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#616161"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </Grid>
-                </StackPanel>
+                        <!-- Student Info Panel -->
+                        <Border x:Name="StudentInfoPanel"
+                                Visibility="Collapsed"
+                                Background="#E3F2FD"
+                                CornerRadius="8"
+                                Padding="20"
+                                Margin="0,0,0,24">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Student Photo -->
+                                <Border Grid.Column="0"
+                                        Width="80"
+                                        Height="80"
+                                        Background="#F5F5F5"
+                                        CornerRadius="4"
+                                        BorderBrush="#E0E0E0"
+                                        BorderThickness="1"
+                                        Margin="0,0,16,0">
+                                    <Image x:Name="StudentPhotoImage"
+                                           Stretch="UniformToFill"/>
+                                </Border>
+
+                                <!-- Student Details -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="Name: "
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#333"
+                                                   Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   x:Name="NameText"
+                                                   Text="-"
+                                                   Foreground="#1976D2"
+                                                   FontWeight="Bold"
+                                                   Margin="0,0,0,8"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                                   Text="CNIC: "
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#333"
+                                                   Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                                   x:Name="CnicText"
+                                                   Text="-"
+                                                   Foreground="#333"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Fingerprint Section -->
+                        <TextBlock Text="Fingerprint Capture" 
+                                   FontWeight="SemiBold"
+                                   Foreground="#333"
+                                   Margin="0,0,0,8"/>
+
+                        <Border Background="#E8F5E9" 
+                                CornerRadius="8" 
+                                Padding="24"
+                                Margin="0,0,0,24">
+                            <StackPanel>
+                                <TextBlock Text="Click Register to capture fingerprint from scanner" 
+                                           FontSize="14"
+                                           Foreground="#2E7D32"
+                                           TextWrapping="Wrap"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Minimum quality required: 70%" 
+                                           FontSize="12"
+                                           Foreground="#666"
+                                           TextWrapping="Wrap"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Buttons -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0"
+                                    x:Name="RegisterButton"
+                                    Content="Register Student"
+                                    Click="RegisterButton_Click"
+                                    Background="#4CAF50"
+                                    Foreground="White"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Padding="24,12"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Margin="0,0,12,0"
+                                    IsEnabled="False">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="#4CAF50"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            CornerRadius="6"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Center"
+                                                                          VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#388E3C"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Background" Value="#BDBDBD"/>
+                                                <Setter Property="Foreground" Value="#757575"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+
+                            <Button Grid.Column="1"
+                                    x:Name="ClearButton"
+                                    Content="Clear"
+                                    Click="ClearButton_Click"
+                                    Background="#757575"
+                                    Foreground="White"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Padding="24,12"
+                                    BorderThickness="0"
+                                    Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="#757575"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            CornerRadius="6"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Center"
+                                                                          VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#616161"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
 
-            <!-- RIGHT: Fingerprint Preview -->
+            <!-- Fingerprint Preview Panel (Right Side) -->
             <Border Grid.Column="1" 
                     Background="White"
                     CornerRadius="8" 
@@ -266,6 +342,7 @@
                                Foreground="#2196F3"
                                Margin="0,0,0,20"/>
 
+                    <!-- Fingerprint Image Container -->
                     <Border BorderBrush="#E0E0E0" 
                             BorderThickness="2" 
                             Background="#F9F9F9"
@@ -275,6 +352,7 @@
                             HorizontalAlignment="Center"
                             Margin="0,0,0,20">
                         <Grid>
+                            <!-- Placeholder Text -->
                             <TextBlock x:Name="PlaceholderText"
                                        Text="No fingerprint captured yet"
                                        FontSize="14"
@@ -283,6 +361,7 @@
                                        VerticalAlignment="Center"
                                        TextAlignment="Center"/>
 
+                            <!-- Fingerprint Image -->
                             <Image x:Name="FingerprintImage" 
                                    Stretch="Uniform"
                                    HorizontalAlignment="Center"
@@ -291,18 +370,18 @@
                         </Grid>
                     </Border>
 
+                    <!-- Capture Information Panel -->
                     <Border x:Name="CaptureInfoPanel" 
                             Visibility="Collapsed"
                             Background="#E8F5E9"
                             Padding="16"
-                            CornerRadius="4"
-                            Margin="0,0,0,0">
+                            CornerRadius="4">
                         <StackPanel>
                             <TextBlock Text="Capture Details" 
-                                   FontSize="14" 
-                                   FontWeight="Bold"
-                                   Foreground="#2E7D32"
-                                   Margin="0,0,0,12"/>
+                                       FontSize="14" 
+                                       FontWeight="Bold"
+                                       Foreground="#2E7D32"
+                                       Margin="0,0,0,12"/>
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -316,37 +395,37 @@
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Grid.Row="0" Grid.Column="0" 
-                                       Text="Quality Score:" 
-                                       FontWeight="SemiBold"
-                                       Foreground="#333"
-                                       Margin="0,0,12,8"/>
+                                           Text="Quality Score:" 
+                                           FontWeight="SemiBold"
+                                           Foreground="#333"
+                                           Margin="0,0,12,8"/>
                                 <TextBlock Grid.Row="0" Grid.Column="1" 
-                                       x:Name="QualityText" 
-                                       Text="-"
-                                       Foreground="#2E7D32"
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,8"/>
+                                           x:Name="QualityText" 
+                                           Text="-"
+                                           Foreground="#2E7D32"
+                                           FontWeight="Bold"
+                                           Margin="0,0,0,8"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" 
-                                       Text="Template Size:" 
-                                       FontWeight="SemiBold"
-                                       Foreground="#333"
-                                       Margin="0,0,12,8"/>
+                                           Text="Template Size:" 
+                                           FontWeight="SemiBold"
+                                           Foreground="#333"
+                                           Margin="0,0,12,8"/>
                                 <TextBlock Grid.Row="1" Grid.Column="1" 
-                                       x:Name="TemplateSizeText" 
-                                       Text="-"
-                                       Foreground="#333"
-                                       Margin="0,0,0,8"/>
+                                           x:Name="TemplateSizeText" 
+                                           Text="-"
+                                           Foreground="#333"
+                                           Margin="0,0,0,8"/>
 
                                 <TextBlock Grid.Row="2" Grid.Column="0" 
-                                       Text="Image Size:" 
-                                       FontWeight="SemiBold"
-                                       Foreground="#333"
-                                       Margin="0,0,12,0"/>
+                                           Text="Image Size:" 
+                                           FontWeight="SemiBold"
+                                           Foreground="#333"
+                                           Margin="0,0,12,0"/>
                                 <TextBlock Grid.Row="2" Grid.Column="1" 
-                                       x:Name="ImageSizeText" 
-                                       Text="-"
-                                       Foreground="#333"/>
+                                           x:Name="ImageSizeText" 
+                                           Text="-"
+                                           Foreground="#333"/>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -360,7 +439,7 @@
                 Background="#99000000"
                 Visibility="Collapsed">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="⏳" 
+                <TextBlock Text="&#x23F3;" 
                            FontSize="48" 
                            HorizontalAlignment="Center"
                            Margin="0,0,0,16"/>

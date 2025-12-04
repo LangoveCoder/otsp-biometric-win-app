@@ -1,0 +1,212 @@
+﻿<Page x:Class="BiometricSuperAdmin.Views.StudentsListView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Students List"
+      Background="#FAFAFA">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Page Title -->
+        <TextBlock Grid.Row="0"
+                   Text="Students List"
+                   FontSize="28"
+                   FontWeight="SemiBold"
+                   Foreground="#1976D2"
+                   Margin="0,0,0,24"/>
+
+        <!-- Context Info and Search -->
+        <Border Grid.Row="1"
+                Background="White"
+                CornerRadius="8"
+                Padding="20"
+                Margin="0,0,0,16">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" Opacity="0.1" BlurRadius="16" ShadowDepth="2" Direction="270"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Context Info -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Current Context" FontWeight="SemiBold" FontSize="14" Foreground="#666" Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="College: " FontWeight="SemiBold" Foreground="#333"/>
+                        <TextBlock x:Name="CollegeText" Text="-" Foreground="#1976D2" Margin="0,0,16,0"/>
+                        <TextBlock Text="Test: " FontWeight="SemiBold" Foreground="#333"/>
+                        <TextBlock x:Name="TestText" Text="-" Foreground="#1976D2" Margin="0,0,16,0"/>
+                        <TextBlock Text="Total: " FontWeight="SemiBold" Foreground="#333"/>
+                        <TextBlock x:Name="TotalCountText" Text="0" Foreground="#4CAF50" FontWeight="Bold"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Search Box -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="Search" FontWeight="SemiBold" FontSize="12" Foreground="#666" Margin="0,0,0,4"/>
+                    <TextBox x:Name="SearchBox"
+                             Width="250"
+                             Padding="8"
+                             FontSize="14"
+                             TextChanged="SearchBox_TextChanged"
+                             Background="#F5F5F5"
+                             BorderBrush="#E0E0E0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Students Data Grid -->
+        <Border Grid.Row="2"
+                Background="White"
+                CornerRadius="8"
+                Padding="20">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" Opacity="0.1" BlurRadius="16" ShadowDepth="2" Direction="270"/>
+            </Border.Effect>
+
+            <Grid>
+                <DataGrid x:Name="StudentsDataGrid"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          AlternatingRowBackground="#F9F9F9"
+                          RowHeight="90">
+                    <DataGrid.Columns>
+                        <!-- Student Photo -->
+                        <DataGridTemplateColumn Header="Photo" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Width="70" Height="70" Background="#F5F5F5" CornerRadius="4" Margin="5">
+                                        <Grid>
+                                            <Image Source="{Binding StudentPhotoImage}" 
+                                                   Stretch="UniformToFill"
+                                                   Visibility="{Binding StudentPhotoVisibility}"/>
+                                            <TextBlock Text="No Photo" 
+                                                      FontSize="10" 
+                                                      Foreground="#999"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      Visibility="{Binding PhotoPlaceholderVisibility}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Roll Number -->
+                        <DataGridTextColumn Header="Roll Number" 
+                                          Binding="{Binding RollNumber}" 
+                                          Width="120"
+                                          FontWeight="SemiBold"
+                                          FontSize="14"/>
+
+                        <!-- Name -->
+                        <DataGridTextColumn Header="Name" 
+                                          Binding="{Binding Name}" 
+                                          Width="180"
+                                          FontSize="14"/>
+
+                        <!-- CNIC -->
+                        <DataGridTextColumn Header="CNIC" 
+                                          Binding="{Binding CNIC}" 
+                                          Width="140"
+                                          FontSize="14"/>
+
+                        <!-- Fingerprint Status -->
+                        <DataGridTemplateColumn Header="Status" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding StatusBackground}"
+                                           CornerRadius="4"
+                                           Padding="8,4"
+                                           HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding FingerprintStatus}" 
+                                                  Foreground="{Binding StatusForeground}"
+                                                  FontWeight="SemiBold"
+                                                  FontSize="12"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Fingerprint Image -->
+                        <DataGridTemplateColumn Header="Fingerprint" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Width="70" Height="70" Background="#F5F5F5" CornerRadius="4" Margin="5">
+                                        <Grid>
+                                            <Image Source="{Binding FingerprintImage}" 
+                                                   Stretch="UniformToFill"
+                                                   Visibility="{Binding FingerprintVisibility}"/>
+                                            <TextBlock Text="No Scan" 
+                                                      FontSize="10" 
+                                                      Foreground="#999"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      Visibility="{Binding FingerprintPlaceholderVisibility}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Template Size -->
+                        <DataGridTextColumn Header="Template" 
+                                          Binding="{Binding TemplateSize}" 
+                                          Width="100"
+                                          FontSize="12"/>
+
+                        <!-- Registration Date -->
+                        <DataGridTextColumn Header="Registered On" 
+                                          Binding="{Binding RegistrationDate}" 
+                                          Width="*"
+                                          FontSize="12"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- No Data Message -->
+                <StackPanel x:Name="NoDataPanel"
+                           Visibility="Collapsed"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center">
+                    <TextBlock Text="📋" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                    <TextBlock Text="No students found" 
+                              FontSize="18" 
+                              FontWeight="SemiBold"
+                              Foreground="#666"
+                              HorizontalAlignment="Center"
+                              Margin="0,0,0,8"/>
+                    <TextBlock Text="Import students using Dashboard → Import Students" 
+                              FontSize="14" 
+                              Foreground="#999"
+                              HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Loading Overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                x:Name="LoadingOverlay"
+                Background="#99000000"
+                Visibility="Collapsed">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="⏳" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                <TextBlock Text="Loading students..." 
+                          FontSize="18" 
+                          Foreground="White"
+                          HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

@@ -1,0 +1,167 @@
+﻿<Page x:Class="BiometricCollegeVerify.Views.WelcomeView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="#F5F5F5">
+
+    <Grid>
+        <Border Background="White"
+                CornerRadius="16"
+                MaxWidth="700"
+                Margin="40"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Padding="60,50">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.15" Color="Black"/>
+            </Border.Effect>
+
+            <StackPanel>
+                <!-- Icon -->
+                <TextBlock Text="📦" 
+                           FontSize="80" 
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,25"/>
+
+                <!-- Title -->
+                <TextBlock Text="Welcome to OTSP" 
+                           FontSize="32" 
+                           FontWeight="Bold" 
+                           Foreground="#1976D2"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,8"/>
+
+                <TextBlock Text="Biometric Verification System" 
+                           FontSize="18" 
+                           Foreground="#666"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,40"/>
+
+                <!-- Message -->
+                <Border Background="#E3F2FD"
+                        BorderBrush="#2196F3"
+                        BorderThickness="2"
+                        CornerRadius="8"
+                        Padding="25,20"
+                        Margin="0,0,0,30">
+                    <StackPanel>
+                        <TextBlock Text="🔔 No Package Loaded" 
+                                   FontSize="16" 
+                                   FontWeight="Bold"
+                                   Foreground="#1976D2"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap"
+                                   TextAlignment="Center"
+                                   Foreground="#555"
+                                   FontSize="13"
+                                   LineHeight="22">
+                            <Run Text="To start verifying students, you need to import a verification package."/>
+                            <LineBreak/>
+                            <Run Text="The package contains college data, test information, and student records."/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Instructions -->
+                <StackPanel Margin="0,0,0,35">
+                    <TextBlock Text="Getting Started:" 
+                               FontSize="16" 
+                               FontWeight="Bold"
+                               Foreground="#333"
+                               Margin="0,0,0,15"/>
+
+                    <!-- Step 1 -->
+                    <Border Background="#FFF3E0"
+                            BorderBrush="#FF9800"
+                            BorderThickness="0,0,0,2"
+                            Padding="20,15"
+                            CornerRadius="6"
+                            Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="1️⃣" FontSize="24" Margin="0,0,15,0" VerticalAlignment="Top"/>
+                            <StackPanel>
+                                <TextBlock Text="Import Package" 
+                                           FontSize="14" 
+                                           FontWeight="Bold"
+                                           Foreground="#E65100"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock Text="Click the orange 'Import Package' button in the left sidebar"
+                                           TextWrapping="Wrap"
+                                           FontSize="12"
+                                           Foreground="#666"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Step 2 -->
+                    <Border Background="#E8F5E9"
+                            BorderBrush="#4CAF50"
+                            BorderThickness="0,0,0,2"
+                            Padding="20,15"
+                            CornerRadius="6"
+                            Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="2️⃣" FontSize="24" Margin="0,0,15,0" VerticalAlignment="Top"/>
+                            <StackPanel>
+                                <TextBlock Text="Select Package File" 
+                                           FontSize="14" 
+                                           FontWeight="Bold"
+                                           Foreground="#2E7D32"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock Text="Choose the verification package (.zip) provided by BACT administration"
+                                           TextWrapping="Wrap"
+                                           FontSize="12"
+                                           Foreground="#666"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Step 3 -->
+                    <Border Background="#E3F2FD"
+                            BorderBrush="#2196F3"
+                            BorderThickness="0,0,0,2"
+                            Padding="20,15"
+                            CornerRadius="6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="3️⃣" FontSize="24" Margin="0,0,15,0" VerticalAlignment="Top"/>
+                            <StackPanel>
+                                <TextBlock Text="Start Verification" 
+                                           FontSize="14" 
+                                           FontWeight="Bold"
+                                           Foreground="#1565C0"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock Text="Once imported, navigate to 'Verification' to begin student authentication"
+                                           TextWrapping="Wrap"
+                                           FontSize="12"
+                                           Foreground="#666"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Info Footer -->
+                <Border Background="#FAFAFA"
+                        BorderBrush="#E0E0E0"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="20,15">
+                    <StackPanel>
+                        <TextBlock Text="ℹ️ Important Notes:" 
+                                   FontSize="13" 
+                                   FontWeight="Bold"
+                                   Foreground="#666"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock FontSize="11" Foreground="#888" LineHeight="18" TextWrapping="Wrap">
+                            <Run Text="• Ensure your fingerprint scanner is connected before starting verification"/>
+                            <LineBreak/>
+                            <Run Text="• The package file should be obtained from BACT administration only"/>
+                            <LineBreak/>
+                            <Run Text="• Keep the package file secure and do not share with unauthorized persons"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

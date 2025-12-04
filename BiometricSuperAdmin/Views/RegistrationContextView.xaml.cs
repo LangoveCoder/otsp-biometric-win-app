@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using BiometricCommon.Database;
 using BiometricCommon.Models;
 using BiometricCommon.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace BiometricSuperAdmin.Views
 {
@@ -19,26 +20,39 @@ namespace BiometricSuperAdmin.Views
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             LoadColleges();
-            LoadTests();
             LoadSavedContext();
+
+            // Wire up college selection event
+            CollegeComboBox.SelectionChanged += CollegeComboBox_SelectionChanged;
         }
 
         private void LoadColleges()
         {
             using var context = new BiometricContext();
-            var colleges = context.Colleges.OrderBy(c => c.Code).ToList();
+            var colleges = context.Colleges
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Code)
+                .ToList();
             CollegeComboBox.ItemsSource = colleges;
-            CollegeComboBox.DisplayMemberPath = "Name";  // ✅ CORRECT: Uses "Name" property
-            CollegeComboBox.SelectedValuePath = "Id";     // ✅ CORRECT: Uses "Id" property
+            CollegeComboBox.DisplayMemberPath = "Name";
+            CollegeComboBox.SelectedValuePath = "Id";
         }
 
-        private void LoadTests()
+        private async void CollegeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (CollegeComboBox.SelectedValue == null) return;
+
+            int collegeId = (int)CollegeComboBox.SelectedValue;
+
             using var context = new BiometricContext();
-            var tests = context.Tests.OrderBy(t => t.Name).ToList();
+            var tests = await context.Tests
+                .Where(t => t.CollegeId == collegeId && t.IsActive)
+                .OrderBy(t => t.Name)
+                .ToListAsync();
+
             TestComboBox.ItemsSource = tests;
-            TestComboBox.DisplayMemberPath = "Name";  // ✅ CORRECT: Uses "Name" property
-            TestComboBox.SelectedValuePath = "Id";     // ✅ CORRECT: Uses "Id" property
+            TestComboBox.DisplayMemberPath = "Name";
+            TestComboBox.SelectedValuePath = "Id";
         }
 
         private void LoadSavedContext()
@@ -86,7 +100,7 @@ namespace BiometricSuperAdmin.Views
                 TestId = selectedTest.Id,
                 TestName = selectedTest.Name,
                 LaptopId = LaptopIdTextBox.Text.Trim(),
-                SetDate = DateTime.Now  // ✅ NOW WORKS - Property exists
+                SetDate = DateTime.Now
             };
 
             RegistrationContext.SaveContext(context);
@@ -100,13 +114,12 @@ namespace BiometricSuperAdmin.Views
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
 
-            // Update main window title
             if (Window.GetWindow(this) is MainWindow mainWindow)
             {
                 mainWindow.Title = $"Biometric Verification System - {context.LaptopId} - {context.CollegeName}";
+                mainWindow.RefreshNavigationState();
             }
 
-            // Navigate to dashboard
             NavigationService?.Navigate(new DashboardView());
         }
 
