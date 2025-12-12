@@ -8,8 +8,9 @@
       Title="VerificationView"
       Background="#FAFAFA">
 
-    <Grid Margin="24">
+    <Grid Margin="20,16,20,16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -17,9 +18,9 @@
         </Grid.RowDefinitions>
 
         <!-- Title with Scanner Status -->
-        <Grid Grid.Row="0" Margin="0,0,0,24">
+        <Grid Grid.Row="0" Margin="0,0,0,12">
             <TextBlock Text="Student Verification"
-                       FontSize="28"
+                       FontSize="22"
                        FontWeight="SemiBold"
                        Foreground="#2E7D32"
                        VerticalAlignment="Center"/>
@@ -27,41 +28,41 @@
             <!-- Scanner Status -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Ellipse x:Name="ScannerStatusIndicator" 
-                         Width="12" 
-                         Height="12" 
+                         Width="10" 
+                         Height="10" 
                          Fill="Gray" 
-                         Margin="0,0,8,0"/>
+                         Margin="0,0,6,0"/>
                 <TextBlock x:Name="ScannerStatusText" 
                            Text="Scanner: Not Initialized" 
-                           FontSize="12" 
+                           FontSize="11" 
                            Foreground="#666"
                            VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
 
         <!-- Roll Number Input Section -->
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,16">
+        <Border Grid.Row="1" Background="White" CornerRadius="6" Padding="14" Margin="0,0,0,10">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Direction="270"/>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
             </Border.Effect>
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Roll Number:" 
-                           FontSize="14" 
+                           FontSize="13" 
                            FontWeight="SemiBold" 
                            VerticalAlignment="Center" 
-                           Margin="0,0,12,0"/>
+                           Margin="0,0,10,0"/>
                 <TextBox x:Name="RollNumberTextBox" 
-                         Width="200" 
-                         FontSize="16" 
-                         Padding="8"
+                         Width="180" 
+                         FontSize="14" 
+                         Padding="6"
                          VerticalAlignment="Center"
-                         Margin="0,0,12,0"/>
+                         Margin="0,0,10,0"/>
                 <Button Content="Load Student" 
                         Click="LoadStudentButton_Click"
                         Background="#2196F3"
                         Foreground="White"
-                        FontSize="14"
-                        Padding="16,8"
+                        FontSize="13"
+                        Padding="14,6"
                         BorderThickness="0"
                         Cursor="Hand">
                     <Button.Style>
@@ -70,7 +71,7 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
                                         <Border Background="{TemplateBinding Background}"
-                                                CornerRadius="6"
+                                                CornerRadius="4"
                                                 Padding="{TemplateBinding Padding}">
                                             <ContentPresenter HorizontalAlignment="Center"
                                                             VerticalAlignment="Center"/>
@@ -88,8 +89,61 @@
                 </Button>
             </StackPanel>
         </Border>
+
+        <!-- Student Details Panel -->
+        <Border Grid.Row="2" x:Name="StudentDetailsPanel" Background="White" CornerRadius="6" Padding="14" Margin="0,0,0,10" Visibility="Collapsed">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Student Photo -->
+                <Border Grid.Column="0" Width="70" Height="70" Background="#F5F5F5" CornerRadius="6" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,16,0">
+                    <Grid>
+                        <Image x:Name="StudentPhotoImage" Stretch="UniformToFill" Visibility="Collapsed"/>
+                        <TextBlock x:Name="PhotoPlaceholder" Text="No Photo" FontSize="9" Foreground="#999" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Student Info Grid -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="85"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Name -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontSize="11" FontWeight="SemiBold" Foreground="#666" Margin="0,0,0,4"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="StudentNameText" Text="-" FontSize="11" FontWeight="SemiBold" Foreground="#212121" Margin="0,0,0,4"/>
+
+                    <!-- Roll Number -->
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Roll Number:" FontSize="11" FontWeight="SemiBold" Foreground="#666" Margin="0,0,0,4"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="StudentRollText" Text="-" FontSize="11" Foreground="#2196F3" FontWeight="Bold" Margin="0,0,0,4"/>
+
+                    <!-- CNIC -->
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="CNIC:" FontSize="11" FontWeight="SemiBold" Foreground="#666" Margin="0,0,0,4"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="StudentCNICText" Text="-" FontSize="11" Foreground="#212121" Margin="0,0,0,4"/>
+
+                    <!-- College -->
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="College:" FontSize="11" FontWeight="SemiBold" Foreground="#666"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="StudentCollegeText" Text="-" FontSize="11" Foreground="#212121" TextWrapping="Wrap"/>
+                </Grid>
+            </Grid>
+        </Border>
+
         <!-- Statistics Cards -->
-        <Grid Grid.Row="2" Margin="0,0,0,24">
+        <Grid Grid.Row="3" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -98,67 +152,67 @@
             </Grid.ColumnDefinitions>
 
             <!-- Total Students -->
-            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,8,0">
+            <Border Grid.Column="0" Background="White" CornerRadius="6" Padding="12" Margin="0,0,6,0">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Direction="270"/>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="Total Students" FontSize="12" Foreground="#666" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="TotalStudentsText" Text="0" FontSize="32" FontWeight="Bold" Foreground="#2E7D32"/>
+                    <TextBlock Text="Total Students" FontSize="10" Foreground="#666" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TotalStudentsText" Text="0" FontSize="22" FontWeight="Bold" Foreground="#2E7D32"/>
                 </StackPanel>
             </Border>
 
             <!-- Verified -->
-            <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="20" Margin="0,0,8,0">
+            <Border Grid.Column="1" Background="White" CornerRadius="6" Padding="12" Margin="0,0,6,0">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Direction="270"/>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="Verified" FontSize="12" Foreground="#666" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="VerifiedStudentsText" Text="0" FontSize="32" FontWeight="Bold" Foreground="#4CAF50"/>
+                    <TextBlock Text="Verified" FontSize="10" Foreground="#666" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="VerifiedStudentsText" Text="0" FontSize="22" FontWeight="Bold" Foreground="#4CAF50"/>
                 </StackPanel>
             </Border>
 
             <!-- Pending -->
-            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="20" Margin="0,0,8,0">
+            <Border Grid.Column="2" Background="White" CornerRadius="6" Padding="12" Margin="0,0,6,0">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Direction="270"/>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="Pending" FontSize="12" Foreground="#666" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="PendingStudentsText" Text="0" FontSize="32" FontWeight="Bold" Foreground="#FF9800"/>
+                    <TextBlock Text="Pending" FontSize="10" Foreground="#666" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="PendingStudentsText" Text="0" FontSize="22" FontWeight="Bold" Foreground="#FF9800"/>
                 </StackPanel>
             </Border>
 
             <!-- Today -->
-            <Border Grid.Column="3" Background="White" CornerRadius="8" Padding="20">
+            <Border Grid.Column="3" Background="White" CornerRadius="6" Padding="12">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Direction="270"/>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="Today" FontSize="12" Foreground="#666" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="TodayVerificationsText" Text="0" FontSize="32" FontWeight="Bold" Foreground="#2196F3"/>
+                    <TextBlock Text="Today" FontSize="10" Foreground="#666" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TodayVerificationsText" Text="0" FontSize="22" FontWeight="Bold" Foreground="#2196F3"/>
                 </StackPanel>
             </Border>
         </Grid>
 
         <!-- Main Content -->
-        <Grid Grid.Row="3">
+        <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.2*"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="350"/>
-                <ColumnDefinition Width="400"/>
+                <ColumnDefinition Width="1.1*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Verification Panel -->
-            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="32" Margin="0,0,16,0">
+            <Border Grid.Column="0" Background="White" CornerRadius="6" Padding="16" Margin="0,0,8,0">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Direction="270"/>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
                 </Border.Effect>
 
                 <StackPanel VerticalAlignment="Center">
                     <!-- Fingerprint Icon -->
-                    <Viewbox Width="120" Height="120" Margin="0,0,0,32">
+                    <Viewbox Width="80" Height="80" Margin="0,0,0,16">
                         <Canvas Width="100" Height="100">
                             <Ellipse Width="100" Height="100" Fill="#E8F5E9" Stroke="#4CAF50" StrokeThickness="2"/>
                             <TextBlock Text="👆" FontSize="60" Canvas.Left="20" Canvas.Top="15"/>
@@ -168,20 +222,22 @@
                     <!-- Instructions -->
                     <TextBlock x:Name="InstructionText"
                                Text="Place finger on scanner"
-                               FontSize="24"
+                               FontSize="16"
                                FontWeight="SemiBold"
                                HorizontalAlignment="Center"
                                Foreground="#2E7D32"
-                               Margin="0,0,0,32"/>
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               Margin="0,0,0,20"/>
 
                     <!-- Verify Button -->
                     <Button x:Name="VerifyButton"
                             Content="🔍 Scan &amp; Verify"
                             Background="#4CAF50"
                             Foreground="White"
-                            FontSize="18"
+                            FontSize="14"
                             FontWeight="SemiBold"
-                            Padding="40,16"
+                            Padding="24,10"
                             HorizontalAlignment="Center"
                             BorderThickness="0"
                             Cursor="Hand"
@@ -193,7 +249,7 @@
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
                                             <Border Background="{TemplateBinding Background}"
-                                                    CornerRadius="8"
+                                                    CornerRadius="6"
                                                     Padding="{TemplateBinding Padding}">
                                                 <ContentPresenter HorizontalAlignment="Center"
                                                                 VerticalAlignment="Center"/>
@@ -219,9 +275,9 @@
                             Content="Manual Override"
                             Background="#FF9800"
                             Foreground="White"
-                            FontSize="14"
-                            Padding="24,12"
-                            Margin="0,16,0,0"
+                            FontSize="12"
+                            Padding="18,8"
+                            Margin="0,12,0,0"
                             HorizontalAlignment="Center"
                             BorderThickness="0"
                             Cursor="Hand"
@@ -232,7 +288,7 @@
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
                                             <Border Background="{TemplateBinding Background}"
-                                                    CornerRadius="6"
+                                                    CornerRadius="4"
                                                     Padding="{TemplateBinding Padding}">
                                                 <ContentPresenter HorizontalAlignment="Center"
                                                                 VerticalAlignment="Center"/>
@@ -250,10 +306,11 @@
                     </Button>
                 </StackPanel>
             </Border>
+
             <!-- Fingerprint Preview Panel -->
-            <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="16" Margin="0,0,16,0">
+            <Border Grid.Column="1" Background="White" CornerRadius="6" Padding="12" Margin="0,0,8,0">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Direction="270"/>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
                 </Border.Effect>
 
                 <Grid>
@@ -266,32 +323,32 @@
                     <!-- Header -->
                     <TextBlock Grid.Row="0"
                                Text="Fingerprint Preview"
-                               FontSize="16"
+                               FontSize="13"
                                FontWeight="SemiBold"
-                               Margin="0,0,0,12"/>
+                               Margin="0,0,0,8"/>
 
                     <!-- Fingerprint Display -->
                     <Border Grid.Row="1"
                             BorderBrush="#E0E0E0"
-                            BorderThickness="2"
+                            BorderThickness="1"
                             CornerRadius="4"
                             Background="#FAFAFA">
                         <Grid>
                             <!-- Placeholder -->
                             <TextBlock x:Name="FingerprintPlaceholder"
                                        Text="No fingerprint captured yet"
-                                       FontSize="12"
+                                       FontSize="10"
                                        Foreground="#999"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        TextWrapping="Wrap"
                                        TextAlignment="Center"
-                                       Margin="20"/>
+                                       Margin="10"/>
 
                             <!-- Image -->
                             <Image x:Name="FingerprintImage"
                                    Stretch="Uniform"
-                                   Margin="10"/>
+                                   Margin="8"/>
                         </Grid>
                     </Border>
 
@@ -300,8 +357,8 @@
                             Grid.Row="2"
                             Background="#E8F5E9"
                             CornerRadius="4"
-                            Padding="12"
-                            Margin="0,12,0,0"
+                            Padding="8"
+                            Margin="0,8,0,0"
                             Visibility="Collapsed">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -317,49 +374,50 @@
                             <!-- Quality -->
                             <TextBlock Grid.Row="0" Grid.Column="0"
                                        Text="Quality:"
-                                       FontSize="11"
+                                       FontSize="9"
                                        Foreground="#666"
-                                       Margin="0,0,0,4"/>
+                                       Margin="0,0,0,3"/>
                             <TextBlock x:Name="QualityText"
                                        Grid.Row="0" Grid.Column="1"
                                        Text="0%"
-                                       FontSize="11"
+                                       FontSize="9"
                                        FontWeight="SemiBold"
                                        Foreground="#4CAF50"
                                        TextAlignment="Right"
-                                       Margin="0,0,0,4"/>
+                                       Margin="0,0,0,3"/>
 
                             <!-- Template Size -->
                             <TextBlock Grid.Row="1" Grid.Column="0"
                                        Text="Template:"
-                                       FontSize="11"
+                                       FontSize="9"
                                        Foreground="#666"
-                                       Margin="0,0,0,4"/>
+                                       Margin="0,0,0,3"/>
                             <TextBlock x:Name="TemplateSizeText"
                                        Grid.Row="1" Grid.Column="1"
                                        Text="0 bytes"
-                                       FontSize="11"
+                                       FontSize="9"
                                        TextAlignment="Right"
-                                       Margin="0,0,0,4"/>
+                                       Margin="0,0,0,3"/>
 
                             <!-- Image Size -->
                             <TextBlock Grid.Row="2" Grid.Column="0"
                                        Text="Image Size:"
-                                       FontSize="11"
+                                       FontSize="9"
                                        Foreground="#666"/>
                             <TextBlock x:Name="ImageSizeText"
                                        Grid.Row="2" Grid.Column="1"
                                        Text="0 x 0 px"
-                                       FontSize="11"
+                                       FontSize="9"
                                        TextAlignment="Right"/>
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
+
             <!-- Result Panel -->
-            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="24">
+            <Border Grid.Column="2" Background="White" CornerRadius="6" Padding="14">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Direction="270"/>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.08" Direction="270"/>
                 </Border.Effect>
 
                 <Grid>
@@ -371,51 +429,51 @@
                     <!-- Header -->
                     <TextBlock Grid.Row="0"
                                Text="Verification Result"
-                               FontSize="18"
+                               FontSize="14"
                                FontWeight="SemiBold"
-                               Margin="0,0,0,16"/>
+                               Margin="0,0,0,10"/>
 
                     <!-- Result Content -->
                     <Border x:Name="ResultPanel"
                             Grid.Row="1"
                             Background="#F5F5F5"
-                            CornerRadius="8"
-                            Padding="20"
+                            CornerRadius="6"
+                            Padding="12"
                             Visibility="Collapsed">
                         <StackPanel>
                             <!-- Status Icon -->
                             <TextBlock x:Name="StatusIcon"
                                        Text="✓"
-                                       FontSize="64"
+                                       FontSize="42"
                                        HorizontalAlignment="Center"
                                        Foreground="#4CAF50"
-                                       Margin="0,0,0,16"/>
+                                       Margin="0,0,0,10"/>
 
                             <!-- Status Text -->
                             <TextBlock x:Name="StatusText"
                                        Text="VERIFIED"
-                                       FontSize="24"
+                                       FontSize="18"
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
                                        Foreground="#4CAF50"
-                                       Margin="0,0,0,24"/>
+                                       Margin="0,0,0,14"/>
 
                             <!-- Student Info -->
                             <StackPanel x:Name="StudentInfoPanel" Visibility="Collapsed">
-                                <TextBlock Text="Roll Number:" FontSize="12" Foreground="#666" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="RollNumberText" Text="-" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                <TextBlock Text="Roll Number:" FontSize="10" Foreground="#666" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="RollNumberText" Text="-" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
-                                <TextBlock Text="College:" FontSize="12" Foreground="#666" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="CollegeText" Text="-" FontSize="14" Margin="0,0,0,16"/>
+                                <TextBlock Text="College:" FontSize="10" Foreground="#666" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="CollegeText" Text="-" FontSize="11" Margin="0,0,0,10" TextWrapping="Wrap"/>
 
-                                <TextBlock Text="Test:" FontSize="12" Foreground="#666" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="TestText" Text="-" FontSize="14" Margin="0,0,0,16"/>
+                                <TextBlock Text="Test:" FontSize="10" Foreground="#666" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="TestText" Text="-" FontSize="11" Margin="0,0,0,10"/>
 
-                                <TextBlock Text="Confidence:" FontSize="12" Foreground="#666" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="ConfidenceText" Text="-" FontSize="14" Margin="0,0,0,16"/>
+                                <TextBlock Text="Confidence:" FontSize="10" Foreground="#666" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="ConfidenceText" Text="-" FontSize="11" Margin="0,0,0,10"/>
 
-                                <TextBlock Text="Time:" FontSize="12" Foreground="#666" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="TimeText" Text="-" FontSize="14"/>
+                                <TextBlock Text="Time:" FontSize="10" Foreground="#666" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="TimeText" Text="-" FontSize="11"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -426,13 +484,13 @@
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Center">
                         <TextBlock Text="No verification yet"
-                                   FontSize="16"
+                                   FontSize="13"
                                    Foreground="#999"
                                    HorizontalAlignment="Center"
-                                   Margin="0,0,0,8"/>
+                                   Margin="0,0,0,6"/>
 
                         <TextBlock Text="Scan a fingerprint to begin"
-                                   FontSize="12"
+                                   FontSize="11"
                                    Foreground="#CCC"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
@@ -442,23 +500,23 @@
 
         <!-- Loading Overlay -->
         <Border x:Name="LoadingOverlay"
-                Grid.RowSpan="4"
+                Grid.RowSpan="5"
                 Background="#99000000"
                 Visibility="Collapsed">
             <Border Background="White"
                     CornerRadius="8"
-                    Padding="40"
+                    Padding="32"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    MinWidth="300">
+                    MinWidth="260">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="⏳"
-                               FontSize="48"
+                               FontSize="40"
                                HorizontalAlignment="Center"
-                               Margin="0,0,0,16"/>
+                               Margin="0,0,0,12"/>
                     <TextBlock x:Name="LoadingText"
                                Text="Processing..."
-                               FontSize="16"
+                               FontSize="14"
                                FontWeight="SemiBold"
                                HorizontalAlignment="Center"
                                Foreground="#2E7D32"/>

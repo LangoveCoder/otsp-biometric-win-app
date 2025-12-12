@@ -56,6 +56,7 @@ namespace BiometricCommon.Services
                         Code = t.Code,
                         Description = t.Description,
                         CollegeId = t.CollegeId,
+                        CollegeCode = _context.Colleges.FirstOrDefault(c => c.Id == t.CollegeId)?.Code ?? "", // ADD COLLEGE CODE
                         TestDate = t.TestDate,
                         RegistrationStartDate = t.RegistrationStartDate,
                         RegistrationEndDate = t.RegistrationEndDate,
@@ -68,7 +69,9 @@ namespace BiometricCommon.Services
                         Name = s.Name,
                         CNIC = s.CNIC,
                         CollegeId = s.CollegeId,
+                        CollegeCode = _context.Colleges.FirstOrDefault(c => c.Id == s.CollegeId)?.Code ?? "", // ADD COLLEGE CODE
                         TestId = s.TestId,
+                        TestCode = _context.Tests.FirstOrDefault(t => t.Id == s.TestId)?.Code ?? "", // ADD TEST CODE
                         StudentPhoto = s.StudentPhoto,
                         FingerprintTemplate = s.FingerprintTemplate,
                         FingerprintImage = s.FingerprintImage,
@@ -143,65 +146,78 @@ namespace BiometricCommon.Services
         /// </summary>
         private async Task ImportFreshConfigurationAsync(MasterConfiguration config, ImportResult result)
         {
-            // Import colleges
+            // Import colleges - MATCH BY CODE, NOT ID
             foreach (var collegeConfig in config.Colleges)
             {
-                var college = new College
-                {
-                    Name = collegeConfig.Name,
-                    Code = collegeConfig.Code,
-                    Address = collegeConfig.Address,
-                    ContactPerson = collegeConfig.ContactPerson,
-                    ContactPhone = collegeConfig.ContactPhone,
-                    ContactEmail = collegeConfig.ContactEmail,
-                    IsActive = collegeConfig.IsActive,
-                    CreatedDate = DateTime.Now
-                };
+                var existingCollege = _context.Colleges.FirstOrDefault(c => c.Code == collegeConfig.Code);
 
-                _context.Colleges.Add(college);
-                result.CollegesImported++;
+                if (existingCollege == null)
+                {
+                    var college = new College
+                    {
+                        // Don't set ID - let it auto-generate
+                        Name = collegeConfig.Name,
+                        Code = collegeConfig.Code,
+                        Address = collegeConfig.Address,
+                        ContactPerson = collegeConfig.ContactPerson,
+                        ContactPhone = collegeConfig.ContactPhone,
+                        ContactEmail = collegeConfig.ContactEmail,
+                        IsActive = collegeConfig.IsActive,
+                        CreatedDate = DateTime.Now
+                    };
+
+                    _context.Colleges.Add(college);
+                    result.CollegesImported++;
+                }
             }
 
             await _context.SaveChangesAsync();
 
-            // Import tests
-            var collegeMapping = _context.Colleges.ToDictionary(c => c.Code, c => c.Id);
-
+            // Import tests - MATCH BY CODE AND COLLEGE CODE
             foreach (var testConfig in config.Tests)
             {
-                var college = _context.Colleges.FirstOrDefault(c => c.Id == testConfig.CollegeId);
+                // Find college by CODE (not ID)
+                var college = _context.Colleges.FirstOrDefault(c => c.Code == testConfig.CollegeCode);
+
                 if (college == null)
                 {
-                    result.Warnings.Add($"Test '{testConfig.Name}' skipped - college not found");
+                    result.Warnings.Add($"Test '{testConfig.Name}' skipped - college code '{testConfig.CollegeCode}' not found");
                     continue;
                 }
 
-                var test = new Test
-                {
-                    Name = testConfig.Name,
-                    Code = testConfig.Code,
-                    Description = testConfig.Description,
-                    CollegeId = college.Id,
-                    TestDate = testConfig.TestDate,
-                    RegistrationStartDate = testConfig.RegistrationStartDate,
-                    RegistrationEndDate = testConfig.RegistrationEndDate,
-                    IsActive = testConfig.IsActive,
-                    CreatedDate = DateTime.Now
-                };
+                var existingTest = _context.Tests.FirstOrDefault(t => t.Code == testConfig.Code);
 
-                _context.Tests.Add(test);
-                result.TestsImported++;
+                if (existingTest == null)
+                {
+                    var test = new Test
+                    {
+                        // Don't set ID - let it auto-generate
+                        Name = testConfig.Name,
+                        Code = testConfig.Code,
+                        Description = testConfig.Description,
+                        CollegeId = college.Id, // Use current DB's college ID
+                        TestDate = testConfig.TestDate,
+                        RegistrationStartDate = testConfig.RegistrationStartDate,
+                        RegistrationEndDate = testConfig.RegistrationEndDate,
+                        IsActive = testConfig.IsActive,
+                        CreatedDate = DateTime.Now
+                    };
+
+                    _context.Tests.Add(test);
+                    result.TestsImported++;
+                }
             }
 
             await _context.SaveChangesAsync();
 
-            // Import students
+            // Import students - MATCH BY COLLEGE CODE AND TEST CODE
             if (config.Students != null && config.Students.Count > 0)
             {
                 foreach (var studentConfig in config.Students)
                 {
-                    var college = _context.Colleges.FirstOrDefault(c => c.Id == studentConfig.CollegeId);
-                    var test = _context.Tests.FirstOrDefault(t => t.Id == studentConfig.TestId);
+                    // Find college and test by CODE
+                    var college = _context.Colleges.FirstOrDefault(c => c.Code == studentConfig.CollegeCode);
+                    var test = _context.Tests.FirstOrDefault(t => t.Code == studentConfig.TestCode);
 
                     if (college == null || test == null)
                     {
@@ -209,25 +225,32 @@ namespace BiometricCommon.Services
                         continue;
                     }
 
-                    var student = new Student
-                    {
-                        RollNumber = studentConfig.RollNumber,
-                        Name = studentConfig.Name,
-                        CNIC = studentConfig.CNIC,
-                        CollegeId = studentConfig.CollegeId,
-                        TestId = studentConfig.TestId,
-                        StudentPhoto = studentConfig.StudentPhoto,
-                        FingerprintTemplate = studentConfig.FingerprintTemplate,
-                        FingerprintImage = studentConfig.FingerprintImage,
-                        FingerprintImageWidth = studentConfig.FingerprintImageWidth,
-                        FingerprintImageHeight = studentConfig.FingerprintImageHeight,
-                        RegistrationDate = studentConfig.RegistrationDate,
-                        DeviceId = studentConfig.DeviceId,
-                        IsVerified = false
-                    };
+                    var existingStudent = _context.Students.FirstOrDefault(s => s.RollNumber == studentConfig.RollNumber
+                                                                              && s.CollegeId == college.Id
+                                                                              && s.TestId == test.Id);
 
-                    _context.Students.Add(student);
-                    result.StudentsImported++;
+                    if (existingStudent == null)
+                    {
+                        var student = new Student
+                        {
+                            RollNumber = studentConfig.RollNumber,
+                            Name = studentConfig.Name,
+                            CNIC = studentConfig.CNIC,
+                            CollegeId = college.Id, // Use current DB's IDs
+                            TestId = test.Id,
+                            StudentPhoto = studentConfig.StudentPhoto,
+                            FingerprintTemplate = studentConfig.FingerprintTemplate,
+                            FingerprintImage = studentConfig.FingerprintImage,
+                            FingerprintImageWidth = studentConfig.FingerprintImageWidth,
+                            FingerprintImageHeight = studentConfig.FingerprintImageHeight,
+                            RegistrationDate = studentConfig.RegistrationDate,
+                            DeviceId = studentConfig.DeviceId,
+                            IsVerified = false
+                        };
+
+                        _context.Students.Add(student);
+                        result.StudentsImported++;
+                    }
                 }
 
                 await _context.SaveChangesAsync();
@@ -239,7 +262,7 @@ namespace BiometricCommon.Services
         /// </summary>
         private async Task MergeConfigurationAsync(MasterConfiguration config, ImportResult result)
         {
-            // Update existing colleges and add new ones
+            // Update existing colleges and add new ones - MATCH BY CODE
             foreach (var collegeConfig in config.Colleges)
             {
                 var existing = _context.Colleges.FirstOrDefault(c => c.Code == collegeConfig.Code);
@@ -275,13 +298,15 @@ namespace BiometricCommon.Services
 
             await _context.SaveChangesAsync();
 
-            // Update existing tests and add new ones
+            // Update existing tests and add new ones - MATCH BY CODE AND COLLEGE CODE
             foreach (var testConfig in config.Tests)
             {
-                var college = _context.Colleges.FirstOrDefault(c => c.Id == testConfig.CollegeId);
+                // Find college by CODE
+                var college = _context.Colleges.FirstOrDefault(c => c.Code == testConfig.CollegeCode);
+
                 if (college == null)
                 {
-                    result.Warnings.Add($"Test '{testConfig.Name}' skipped - college not found");
+                    result.Warnings.Add($"Test '{testConfig.Name}' skipped - college code '{testConfig.CollegeCode}' not found");
                     continue;
                 }
 
@@ -291,6 +316,7 @@ namespace BiometricCommon.Services
                 {
                     existing.Name = testConfig.Name;
                     existing.Description = testConfig.Description;
+                    existing.CollegeId = college.Id; // Update to current DB's college ID
                     existing.TestDate = testConfig.TestDate;
                     existing.RegistrationStartDate = testConfig.RegistrationStartDate;
                     existing.RegistrationEndDate = testConfig.RegistrationEndDate;
@@ -319,31 +345,34 @@ namespace BiometricCommon.Services
 
             await _context.SaveChangesAsync();
 
-            // Import students (add new only, don't update existing)
+            // Import students - MATCH BY ROLL NUMBER + COLLEGE CODE + TEST CODE
             if (config.Students != null && config.Students.Count > 0)
             {
                 foreach (var studentConfig in config.Students)
                 {
-                    var existing = _context.Students.FirstOrDefault(s => s.RollNumber == studentConfig.RollNumber);
+                    // Find college and test by CODE
+                    var college = _context.Colleges.FirstOrDefault(c => c.Code == studentConfig.CollegeCode);
+                    var test = _context.Tests.FirstOrDefault(t => t.Code == studentConfig.TestCode);
+
+                    if (college == null || test == null)
+                    {
+                        result.Warnings.Add($"Student '{studentConfig.RollNumber}' skipped - college or test not found");
+                        continue;
+                    }
+
+                    var existing = _context.Students.FirstOrDefault(s => s.RollNumber == studentConfig.RollNumber
+                                                                      && s.CollegeId == college.Id
+                                                                      && s.TestId == test.Id);
 
                     if (existing == null)
                     {
-                        var college = _context.Colleges.FirstOrDefault(c => c.Id == studentConfig.CollegeId);
-                        var test = _context.Tests.FirstOrDefault(t => t.Id == studentConfig.TestId);
-
-                        if (college == null || test == null)
-                        {
-                            result.Warnings.Add($"Student '{studentConfig.RollNumber}' skipped - college or test not found");
-                            continue;
-                        }
-
                         var student = new Student
                         {
                             RollNumber = studentConfig.RollNumber,
                             Name = studentConfig.Name,
                             CNIC = studentConfig.CNIC,
-                            CollegeId = studentConfig.CollegeId,
-                            TestId = studentConfig.TestId,
+                            CollegeId = college.Id,
+                            TestId = test.Id,
                             StudentPhoto = studentConfig.StudentPhoto,
                             FingerprintTemplate = studentConfig.FingerprintTemplate,
                             FingerprintImage = studentConfig.FingerprintImage,
@@ -428,6 +457,7 @@ namespace BiometricCommon.Services
         public string Code { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public int CollegeId { get; set; }
+        public string CollegeCode { get; set; } = string.Empty; // ADDED FOR CODE-BASED MATCHING
         public DateTime TestDate { get; set; }
         public DateTime RegistrationStartDate { get; set; }
         public DateTime RegistrationEndDate { get; set; }
@@ -444,7 +474,9 @@ namespace BiometricCommon.Services
         public string? Name { get; set; }
         public string? CNIC { get; set; }
         public int CollegeId { get; set; }
+        public string CollegeCode { get; set; } = string.Empty; // ADDED FOR CODE-BASED MATCHING
         public int TestId { get; set; }
+        public string TestCode { get; set; } = string.Empty; // ADDED FOR CODE-BASED MATCHING
         public byte[]? StudentPhoto { get; set; }
         public byte[]? FingerprintTemplate { get; set; }
         public byte[]? FingerprintImage { get; set; }

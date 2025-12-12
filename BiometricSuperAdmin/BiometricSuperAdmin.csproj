@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
+		<ApplicationIcon>SuperAdminIcon.ico</ApplicationIcon>
 		<Platforms>x64</Platforms>
 		<PlatformTarget>x64</PlatformTarget>
 		
@@ -19,6 +20,11 @@
 		<None Remove="BiometricCommon\**" />
 		<Page Remove="BiometricCommon2\**" />
 		<Page Remove="BiometricCommon\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="BACTLogo.png" />
+	  <None Remove="SuperAdminIcon.ico" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -52,5 +58,13 @@
 		<None Include="..\BiometricCommon\SecuGenSDK\sgbledev.dll">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+	<ItemGroup>
+	  <Resource Include="BACTLogo.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="SuperAdminIcon.ico">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Resource>
 	</ItemGroup>
 </Project>

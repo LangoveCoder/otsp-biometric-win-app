@@ -1,13 +1,17 @@
 <Window x:Class="BiometricSuperAdmin.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Biometric Verification System - SuperAdmin" 
+        Title="BACT | OTSP - Biometric Verification System - SuperAdmin" 
         Height="768" 
         Width="1366"
         WindowState="Maximized"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Icon="SuperAdminIcon.ico">
 
     <Window.Resources>
+        <!-- Segoe MDL2 Assets Font for Fingerprint Icon -->
+        <FontFamily x:Key="SegoeIcon">Segoe MDL2 Assets</FontFamily>
+
         <!-- Page Title Style -->
         <Style x:Key="PageTitle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="28"/>
@@ -164,16 +168,19 @@
                     Background="#1A237E" 
                     BorderBrush="#0D47A1" 
                     BorderThickness="0,0,1,0">
-                <StackPanel>
-                    <!-- App Logo/Title -->
-                    <Border Background="#0D47A1" Padding="20" Margin="0,0,0,20">
+                <DockPanel>
+                    <!-- App Title at Top -->
+                    <Border DockPanel.Dock="Top" Background="#0D47A1" Padding="20" Margin="0,0,0,20">
                         <StackPanel>
-                            <TextBlock Text="🔐" 
-                                     FontSize="48" 
+                            <!-- Fingerprint Icon using Segoe MDL2 Assets -->
+                            <TextBlock Text="&#xE928;" 
+                                     FontFamily="{StaticResource SegoeIcon}"
+                                     FontSize="56" 
                                      HorizontalAlignment="Center" 
+                                     Margin="0,0,0,10" 
                                      Foreground="White"/>
-                            <TextBlock Text="Biometric System" 
-                                     FontSize="16" 
+                            <TextBlock Text="BACT | OTSP Biometric System" 
+                                     FontSize="13" 
                                      FontWeight="Bold" 
                                      HorizontalAlignment="Center" 
                                      Foreground="White" 
@@ -186,7 +193,8 @@
                     </Border>
 
                     <!-- Navigation Menu -->
-                    <ListBox x:Name="NavigationListBox"
+                    <ListBox DockPanel.Dock="Top"
+                             x:Name="NavigationListBox"
                              Background="Transparent"
                              BorderThickness="0"
                              Foreground="White"
@@ -225,7 +233,50 @@
                         <ListBoxItem Content="📦 Generate Package"/>
                         <ListBoxItem Content="📈 Reports &amp; Analytics"/>
                     </ListBox>
-                </StackPanel>
+
+                    <!-- Copyright/Footer Section -->
+                    <Border DockPanel.Dock="Bottom" 
+                            Background="#0D47A1" 
+                            Padding="15,12"
+                            BorderBrush="#1565C0"
+                            BorderThickness="0,1,0,0"
+                            Margin="0,10,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Version 1.0.0" 
+                                     FontSize="10" 
+                                     Foreground="#B39DDB" 
+                                     HorizontalAlignment="Center"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="© 2026 BACT | OTSP" 
+                                     FontSize="10" 
+                                     Foreground="#B39DDB" 
+                                     HorizontalAlignment="Center"
+                                     Margin="0,0,0,6"/>
+                            <TextBlock Text="Developed by" 
+                                     FontSize="9" 
+                                     Foreground="#9575CD" 
+                                     HorizontalAlignment="Center"
+                                     Margin="0,0,0,2"/>
+                            <TextBlock Text="Anthropic &amp; Nadeem Baloch" 
+                                     FontSize="10" 
+                                     FontWeight="SemiBold"
+                                     Foreground="White" 
+                                     HorizontalAlignment="Center"
+                                     TextWrapping="Wrap"
+                                     TextAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- BACT Logo at Very Bottom -->
+                    <Border DockPanel.Dock="Bottom" 
+                            Background="#0D47A1" 
+                            Padding="20,15">
+                        <Image Source="BACTLogo.png" 
+                               Height="100"
+                               HorizontalAlignment="Center"
+                               Stretch="Uniform"/>
+                    </Border>
+                </DockPanel>
             </Border>
 
             <!-- Main Content Area -->

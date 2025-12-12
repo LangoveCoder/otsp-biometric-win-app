@@ -6,9 +6,13 @@
         Width="1400"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F5F5">
+        Background="#F5F5F5"
+        Icon="CollegeVerifyIcon.ico">
 
     <Window.Resources>
+        <!-- Segoe MDL2 Assets Font for Fingerprint Icon -->
+        <FontFamily x:Key="SegoeIcon">Segoe MDL2 Assets</FontFamily>
+
         <Style x:Key="NavButton" TargetType="Border">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Padding" Value="20,15"/>
@@ -41,12 +45,19 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Logo Section -->
                 <Border Grid.Row="0" Background="#0D47A1" Padding="25" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="🎓" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                        <!-- Fingerprint Icon using Segoe MDL2 Assets -->
+                        <TextBlock Text="&#xE928;" 
+                                   FontFamily="{StaticResource SegoeIcon}"
+                                   FontSize="56" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,0,0,10" 
+                                   Foreground="white"/>
                         <TextBlock Text="BACT | OTSP" FontSize="36" HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBlock Text="Biometric Verification" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="White"/>
                         <TextBlock Text="College System" FontSize="12" HorizontalAlignment="Center" Foreground="#90CAF9" Margin="0,4,0,0"/>
@@ -62,7 +73,7 @@
                         <Style TargetType="Border">
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#FB8C00"/>
+                                    <Setter Property="Background" Value="#45A049"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -78,7 +89,7 @@
                             <TextBlock Text="📦" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Import Package" Foreground="White" FontWeight="Bold" FontSize="15" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="1" Text="Load college verification data" Foreground="#FFF3E0" FontSize="11" HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        <TextBlock Grid.Row="1" Text="Load college verification data" Foreground="#E8F5E9" FontSize="11" HorizontalAlignment="Center" Margin="0,6,0,0"/>
                     </Grid>
                 </Border>
 
@@ -149,11 +160,41 @@
                     </StackPanel>
                 </Border>
 
+                <!-- BACT Logo -->
+                <Border Grid.Row="4" 
+                        Background="#0D47A1" 
+                        Padding="20,15"
+                        Margin="0,10,0,0">
+                    <Image Source="BACTLogo.png" 
+                           Height="75"
+                           HorizontalAlignment="Center"
+                           Stretch="Uniform"/>
+                </Border>
+
                 <!-- Footer -->
-                <Border Grid.Row="4" Padding="20,15" Background="#0D47A1">
+                <Border Grid.Row="5" 
+                        Padding="15,12" 
+                        Background="#0D47A1"
+                        BorderBrush="#1565C0"
+                        BorderThickness="0,1,0,0">
                     <StackPanel>
-                        <TextBlock Text="Version 1.0.0" FontSize="11" Foreground="#90CAF9" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                        <TextBlock Text="© 2025 OTSP | Developed by Nadeem Ahmed" FontSize="10" Foreground="#64B5F6" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        <TextBlock Text="Version 1.0.0" 
+                                 FontSize="10" 
+                                 Foreground="#90CAF9" 
+                                 HorizontalAlignment="Center"
+                                 Margin="0,0,0,4"/>
+                        <TextBlock Text="© 2026 BACT | OTSP" 
+                                 FontSize="10" 
+                                 Foreground="#90CAF9" 
+                                 HorizontalAlignment="Center"
+                                 Margin="0,0,0,6"/>
+                        <TextBlock Text="Developed by Anthropic &amp; Nadeem Baloch"
+                                 FontSize="9" 
+                                   FontWeight="SemiBold"
+                                 Foreground="#64B5F6" 
+                                 HorizontalAlignment="Center"
+                                 Margin="0,0,0,2"/>
+                        
                     </StackPanel>
                 </Border>
             </Grid>

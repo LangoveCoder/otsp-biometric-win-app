@@ -23,7 +23,7 @@
                 Background="#673AB7"
                 Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="Welcome to Biometric Verification System"
+                <TextBlock Text="Welcome to BACT | OTSP - Biometric Verification System"
                          FontSize="20"
                          FontWeight="Medium"
                          Foreground="White"

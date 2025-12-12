@@ -241,6 +241,58 @@ namespace BiometricSuperAdmin.Views
             reportWindow.ShowDialog();
         }
 
+        private async void InspectDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedFiles.Count == 0)
+            {
+                System.Windows.MessageBox.Show(
+                    "Please select a database file first.",
+                    "No File Selected",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            InspectionPanel.Visibility = Visibility.Visible;
+            InspectionResults.Text = "Loading...";
+
+            try
+            {
+                var report = await _mergeService.InspectDatabaseAsync(_selectedFiles[0].FilePath);
+                InspectionResults.Text = report;
+            }
+            catch (Exception ex)
+            {
+                InspectionResults.Text = $"Error: {ex.Message}";
+            }
+        }
+
+        private async void InspectMasterDB_Click(object sender, RoutedEventArgs e)
+        {
+            InspectionPanel.Visibility = Visibility.Visible;
+            InspectionResults.Text = "Loading...";
+
+            try
+            {
+                var masterPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "BiometricVerification", "BiometricData.db");
+
+                if (!File.Exists(masterPath))
+                {
+                    InspectionResults.Text = "Master database not found at:\n" + masterPath;
+                    return;
+                }
+
+                var report = await _mergeService.InspectDatabaseAsync(masterPath);
+                InspectionResults.Text = report;
+            }
+            catch (Exception ex)
+            {
+                InspectionResults.Text = $"Error: {ex.Message}";
+            }
+        }
+
         private void RefreshFilesList()
         {
             FilesListBox.ItemsSource = null;
@@ -268,4 +320,5 @@ namespace BiometricSuperAdmin.Views
         public string FilePath { get; set; } = string.Empty;
         public string FileName { get; set; } = string.Empty;
     }
+
 }
